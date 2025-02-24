@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,9 @@ public class ArticleResponse {
     String description;
     String code;
     Float inStockAmount;
+    Boolean lowInStockAmount;
     UnitMeasureResponse unitMeasure;
+    List<String> tags;
     AuditDTO audit;
 
     @SuppressWarnings("DuplicatedCode")
@@ -33,6 +36,12 @@ public class ArticleResponse {
         dto.setCode(article.getCode());
         dto.setInStockAmount(article.getInStockAmount());
         dto.setUnitMeasure(UnitMeasureResponse.fromEntity(article.getUnitMeasure()));
+        dto.setLowInStockAmount(
+            article.getInStockAmountWarning() != null && article.getInStockAmount() <= article.getInStockAmountWarning()
+        );
+        dto.setTags(
+            article.getTags().stream().map(tag -> tag.getName()).toList()
+        );
 
         return dto;
     }

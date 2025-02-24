@@ -51,6 +51,9 @@ public class Article {
     @ColumnDefault(value = "0")
     private Float inStockAmount;
 
+    @Column(columnDefinition = "DECIMAL(10,2)", nullable = true)
+    private Float inStockAmountWarning;
+
     @Embedded
     private Audit audit;
 }
