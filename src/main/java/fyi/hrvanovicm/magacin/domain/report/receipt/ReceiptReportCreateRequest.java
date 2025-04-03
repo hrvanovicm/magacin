@@ -20,21 +20,4 @@ public class ReceiptReportCreateRequest {
 
     String supplierCompanyName;
     String supplierReportCode;
-
-    public ReportEntity toEntity() {
-        var report = new ReportEntity();
-        var receipt = new ReceiptReport();
-
-        report.setCode(code);
-        report.setDate(date.toString());
-        report.setDescriptionHtml(descriptionHtml);
-        report.setPlaceOfPublish(placeOfPublish);
-        report.setSignedByName(signedByName);
-
-        receipt.setSupplierCompanyName(supplierCompanyName);
-        receipt.setSupplierReportCode(supplierReportCode);
-        report.setReceiptReport(receipt);
-
-        return report;
-    }
 }
