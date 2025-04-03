@@ -1,0 +1,8 @@
+[
+  {
+    "name": "org.hibernate.community.dialect.SQLiteDialect",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  }
+]
