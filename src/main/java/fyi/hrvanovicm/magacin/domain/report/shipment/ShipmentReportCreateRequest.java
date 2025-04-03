@@ -1,7 +1,6 @@
 package fyi.hrvanovicm.magacin.domain.report.shipment;
 
 import fyi.hrvanovicm.magacin.domain.report.ReportEntity;
-import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReport;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -23,7 +22,7 @@ public class ShipmentReportCreateRequest {
 
     public ReportEntity toEntity() {
         var report = new ReportEntity();
-        var receipt = new ShipmentReport();
+        var receipt = new ShipmentReportEntity();
 
         report.setCode(code);
         report.setDate(date.toString());

@@ -1,8 +1,5 @@
 package fyi.hrvanovicm.magacin.domain.report.receipt;
 
-import fyi.hrvanovicm.magacin.domain.products.ProductBasicResponse;
-import fyi.hrvanovicm.magacin.domain.report.ReportProductEntity;
-import fyi.hrvanovicm.magacin.domain.report.ReportResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +10,7 @@ public class ReceiptReportResponse {
     private String supplierCompanyName;
     private String supplierReportCode;
 
-    public static ReceiptReportResponse fromEntity(ReceiptReport entity) {
+    public static ReceiptReportResponse fromEntity(ReceiptReportEntity entity) {
         var dto = new ReceiptReportResponse();
 
         dto.setId(entity.getId());

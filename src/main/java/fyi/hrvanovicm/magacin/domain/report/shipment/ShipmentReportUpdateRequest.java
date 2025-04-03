@@ -22,7 +22,7 @@ public class ShipmentReportUpdateRequest {
 
     public ReportEntity toEntity(Long id, Long shipmentId) {
         var report = new ReportEntity();
-        var shipment = new ShipmentReport();
+        var shipment = new ShipmentReportEntity();
 
         report.setId(id);
         report.setCode(code);

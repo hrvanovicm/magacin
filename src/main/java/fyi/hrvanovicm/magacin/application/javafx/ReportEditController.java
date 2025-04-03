@@ -4,7 +4,7 @@ import fyi.hrvanovicm.magacin.domain.products.ProductBasicResponse;
 import fyi.hrvanovicm.magacin.domain.products.ProductService;
 import fyi.hrvanovicm.magacin.domain.products.ProductSpecification;
 import fyi.hrvanovicm.magacin.domain.report.ReportDetailsResponse;
-import fyi.hrvanovicm.magacin.domain.report.ReportProductResponse;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
 import fyi.hrvanovicm.magacin.domain.report.ReportService;
 import fyi.hrvanovicm.magacin.domain.report.ReportType;
 import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportCreateRequest;

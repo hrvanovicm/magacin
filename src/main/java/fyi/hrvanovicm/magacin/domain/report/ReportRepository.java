@@ -9,8 +9,8 @@ import java.util.List;
 
 @Repository
 public interface ReportRepository extends JpaRepository<ReportEntity, Long>, JpaSpecificationExecutor<ReportEntity> {
-    @Query("SELECT DISTINCT rr.supplierCompanyName as name FROM ReceiptReport rr " +
-            "UNION SELECT DISTINCT sr.receiptCompanyName as name FROM ShipmentReport sr")
+    @Query("SELECT DISTINCT rr.supplierCompanyName as name FROM ReceiptReportEntity rr " +
+            "UNION SELECT DISTINCT sr.receiptCompanyName as name FROM ShipmentReportEntity sr")
     List<String> findDistinctSupplierCompanyNames();
 
     @Query("SELECT DISTINCT signedByName FROM ReportEntity")

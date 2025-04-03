@@ -1,4 +1,4 @@
-package fyi.hrvanovicm.magacin.domain.report.shipment;
+package fyi.hrvanovicm.magacin.domain.report.receipt;
 
 import fyi.hrvanovicm.magacin.domain.report.ReportEntity;
 import jakarta.persistence.*;
@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @Entity
-public class ShipmentReport {
+@Table(name = "receipt_report")
+public class ReceiptReportEntity {
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,5 +20,8 @@ public class ShipmentReport {
     private ReportEntity report;
 
     @Column
-    private String receiptCompanyName;
+    private String supplierCompanyName;
+
+    @Column
+    private String supplierReportCode;
 }

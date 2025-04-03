@@ -2,7 +2,7 @@ package fyi.hrvanovicm.magacin.domain.products;
 
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
 import fyi.hrvanovicm.magacin.domain.products.tag.ProductTagEntity;
-import fyi.hrvanovicm.magacin.domain.report.ReportProductResponse;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
 import fyi.hrvanovicm.magacin.domain.common.embedded.AuditDTO;
 import lombok.Getter;

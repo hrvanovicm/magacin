@@ -1,8 +1,9 @@
 package fyi.hrvanovicm.magacin.domain.report;
 
 import fyi.hrvanovicm.magacin.domain.common.embedded.Audit;
-import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReport;
-import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReport;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductEntity;
+import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportEntity;
+import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportEntity;
 import lombok.*;
 
 import jakarta.persistence.*;
@@ -40,10 +41,10 @@ public class ReportEntity {
     private String signedByName;
 
     @OneToOne(mappedBy = "report", cascade = CascadeType.ALL)
-    private ReceiptReport receiptReport;
+    private ReceiptReportEntity receiptReport;
 
     @OneToOne(mappedBy = "report", cascade = CascadeType.ALL)
-    private ShipmentReport shipmentReport;
+    private ShipmentReportEntity shipmentReport;
 
     @OneToMany(mappedBy = "report", fetch = FetchType.EAGER)
     private List<ReportProductEntity> reportProducts = new ArrayList<>();

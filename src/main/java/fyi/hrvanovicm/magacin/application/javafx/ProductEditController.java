@@ -3,7 +3,7 @@ package fyi.hrvanovicm.magacin.application.javafx;
 import fyi.hrvanovicm.magacin.domain.products.*;
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionUpdateRequest;
-import fyi.hrvanovicm.magacin.domain.report.ReportProductResponse;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureService;
 import fyi.hrvanovicm.magacin.infrastructure.javafx.Router;

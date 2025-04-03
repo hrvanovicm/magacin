@@ -1,6 +1,7 @@
-package fyi.hrvanovicm.magacin.domain.report;
+package fyi.hrvanovicm.magacin.domain.report.product;
 
 import fyi.hrvanovicm.magacin.domain.products.ProductBasicResponse;
+import fyi.hrvanovicm.magacin.domain.report.ReportResponse;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

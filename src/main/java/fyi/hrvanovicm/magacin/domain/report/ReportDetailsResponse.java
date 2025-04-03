@@ -1,6 +1,7 @@
 package fyi.hrvanovicm.magacin.domain.report;
 
 import fyi.hrvanovicm.magacin.domain.common.embedded.AuditDTO;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
 import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportResponse;
 import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportResponse;
 import lombok.Getter;
