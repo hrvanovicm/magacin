@@ -1,0 +1,29 @@
+<jasperReport name="Blank_Letter" language="java" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b55bce93-bd99-475e-b8d7-c6b90e1affb0">
+    <parameter name="title" class="java.lang.String"/>
+
+    <property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+
+    <!-- Title section -->
+    <title height="79" splitType="Stretch">
+        <element kind="textField" uuid="182a2db6-19e6-4b2d-8ff2-f3f93b858741" x="230" y="30" width="100" height="30">
+            <expression><![CDATA[$P{title}]]></expression>
+        </element>
+    </title>
+
+    <!-- Detail section with filter expression -->
+    <detail>
+        <band height="100" splitType="Stretch">
+            <element kind="textField" uuid="cbd9d53e-b937-4f56-b575-2e93e6e4da40" x="50" y="10" width="200" height="30">
+                <expression><![CDATA["This is the detail section"]]></expression>
+                <printWhenExpression><![CDATA[Boolean.TRUE]]></printWhenExpression>
+            </element>
+        </band>
+    </detail>
+
+    <!-- Empty sections to make the report work -->
+    <pageHeader height="35" splitType="Stretch"/>
+    <columnHeader height="61" splitType="Stretch"/>
+    <columnFooter height="45" splitType="Stretch"/>
+    <pageFooter height="54" splitType="Stretch"/>
+    <summary height="42" splitType="Stretch"/>
+</jasperReport>
