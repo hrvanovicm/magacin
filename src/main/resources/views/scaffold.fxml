@@ -1,27 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.controlsfx.control.NotificationPane?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="581.0" prefWidth="807.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fyi.hrvanovicm.magacin.application.javafx.ScaffoldContoller">
-    <children>
-        <BorderPane fx:id="main" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
-            <top>
-                <MenuBar BorderPane.alignment="CENTER">
-                    <Menu mnemonicParsing="false" text="Resursi">
-                  <items>
-                     <MenuItem fx:id="menuProductBtn" mnemonicParsing="false" text="Proizvodi" />
-                     <MenuItem fx:id="menuCommercialProductBtn" mnemonicParsing="false" text="Komercijala" />
-                     <MenuItem fx:id="menuRawMaterialProductBtn" mnemonicParsing="false" text="Sirovine" />
-                  </items></Menu>
-                    <Menu mnemonicParsing="false" text="Ulaz/Izlaz">
-                  <items>
-                     <MenuItem fx:id="menuReceiptReportBtn" mnemonicParsing="false" text="Primke" />
-                     <MenuItem fx:id="menuShipmentReportBtn" mnemonicParsing="false" text="Otpremnice" />
-                  </items>
-                    </Menu>
-                </MenuBar>
-            </top>
-        </BorderPane>
-    </children>
-</VBox>
+<?import javafx.scene.control.Label?>
+<NotificationPane fx:id="notificationPane" xmlns="http://javafx.com/javafx/23.0.1"
+                  xmlns:fx="http://javafx.com/fxml/1"
+                  fx:controller="fyi.hrvanovicm.magacin.application.javafx.controllers.ScaffoldContoller">
+    <content>
+        <VBox prefHeight="581.0" prefWidth="807.0">
+            <children>
+                <BorderPane fx:id="main" minHeight="200.0" minWidth="500.0" prefHeight="200.0" prefWidth="500.0" VBox.vgrow="ALWAYS">
+                    <top>
+                        <MenuBar BorderPane.alignment="CENTER">
+                            <Menu mnemonicParsing="false" text="Resursi">
+                                <items>
+                                    <MenuItem fx:id="menuProductBtn" mnemonicParsing="false" text="Proizvodi" />
+                                    <MenuItem fx:id="menuCommercialProductBtn" mnemonicParsing="false" text="Komercijala" />
+                                    <MenuItem fx:id="menuRawMaterialProductBtn" mnemonicParsing="false" text="Sirovine" />
+                                </items>
+                            </Menu>
+                            <Menu mnemonicParsing="false" text="Ulaz/Izlaz">
+                                <items>
+                                    <MenuItem fx:id="menuReceiptReportBtn" mnemonicParsing="false" text="Primke" />
+                                    <MenuItem fx:id="menuShipmentReportBtn" mnemonicParsing="false" text="Otpremnice" />
+                                </items>
+                            </Menu>
+                        </MenuBar>
+                    </top>
+                    <bottom>
+                        <Label text="Copyright @ 2025 https://github.com/hrvanovicm/magacin" />
+                    </bottom>
+                </BorderPane>
+            </children>
+        </VBox>
+    </content>
+</NotificationPane>
