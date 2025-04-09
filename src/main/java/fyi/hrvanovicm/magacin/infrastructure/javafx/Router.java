@@ -1,6 +1,6 @@
 package fyi.hrvanovicm.magacin.infrastructure.javafx;
 
-import fyi.hrvanovicm.magacin.application.javafx.ScaffoldContoller;
+import fyi.hrvanovicm.magacin.application.javafx.controllers.ScaffoldContoller;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -47,18 +47,7 @@ public class Router {
             Parent root = (Parent) node;
             Scene scene = new Scene(root);
 
-            double width = 1200;
-            double height = 800;
-
-            scene.getRoot().setStyle(
-                    String.format("-fx-width: %f; -fx-height: %f;", width, height)
-            );
-
-            primaryStage.setWidth(width);
-            primaryStage.setHeight(height);
-
             primaryStage.setScene(scene);
-            primaryStage.centerOnScreen();
             primaryStage.show();
         });
     }
