@@ -1,5 +1,7 @@
-package fyi.hrvanovicm.magacin.application.javafx;
+package fyi.hrvanovicm.magacin.application.javafx.controllers;
 
+import fyi.hrvanovicm.magacin.application.javafx.components.CellFactory;
+import fyi.hrvanovicm.magacin.application.javafx.components.CellValueFactory;
 import fyi.hrvanovicm.magacin.domain.products.*;
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionUpdateRequest;
@@ -7,6 +9,7 @@ import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureService;
 import fyi.hrvanovicm.magacin.infrastructure.javafx.Router;
+import fyi.hrvanovicm.magacin.infrastructure.notification.NotificationService;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -15,19 +18,22 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseButton;
 import javafx.scene.web.HTMLEditor;
-import javafx.util.Callback;
 import net.rgielen.fxweaver.core.FxmlView;
-import org.controlsfx.control.SearchableComboBox;
+import net.sf.jasperreports.engine.*;
+import net.sf.jasperreports.view.JasperViewer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @FxmlView("/views/product-edit.fxml")
 public class ProductEditController {
-    // FXML Product input.
+    // FXML CellValueFactory input.
     @FXML
     private Label titleLabel;
     @FXML
@@ -84,9 +90,14 @@ public class ProductEditController {
     private final ProductService productService;
     private final UnitMeasureService unitMeasureService;
 
+    private List<ProductBasicResponse> rawMaterialProducts = List.of();
+
     // Controller state.
     ProductDetailsResponse product;
     private final Router router;
+
+    @Autowired
+    NotificationService notificationService;
 
     public ProductEditController(
             Router router,
@@ -101,6 +112,7 @@ public class ProductEditController {
     public void initialize() {
         // Reception table config.
         receptionTable.setEditable(true);
+        this.rawMaterialProducts = this.productService.getAll(ProductSpecification.isRawMaterial());
 
         var receptionTableContextMenu = new ContextMenu();
 
@@ -153,79 +165,18 @@ public class ProductEditController {
            new SimpleObjectProperty<>(cellData.getValue().getRawMaterialProduct())
         );
         rawMaterialProductReceptionTableColumn.setEditable(true);
-        rawMaterialProductReceptionTableColumn.setCellFactory(new Callback<TableColumn<ProductReceptionBasicResponse, ProductBasicResponse>, TableCell<ProductReceptionBasicResponse, ProductBasicResponse>>() {
-            @Override
-            public TableCell<ProductReceptionBasicResponse, ProductBasicResponse> call(
-                    TableColumn<ProductReceptionBasicResponse,
-                            ProductBasicResponse> param
-            ) {
-                return new TableCell<>() {
-                    private SearchableComboBox<ProductBasicResponse> comboBox;
-
-                    @Override
-                    public void updateItem(ProductBasicResponse item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (empty) {
-                            setGraphic(null);
-                        } else {
-                            var rawMaterials = FXCollections.observableArrayList(
-                                    productService.getAll(ProductSpecification.isRawMaterial())
-                            );
-                            if (comboBox == null) {
-                                comboBox = new SearchableComboBox<>();
-                                comboBox.setItems(rawMaterials); // Populate the combo box
-                                comboBox.setEditable(true);
-                            }
-
-                            comboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-                                if (getTableRow() != null && getTableRow().getItem() != null) {
-                                    ProductReceptionBasicResponse rowItem = getTableRow().getItem();
-                                    // Update the product when the ComboBox value changes
-                                    rowItem.setRawMaterialProduct(newValue);  // Update the value in your model
-                                }
-                            });
-
-                            comboBox.setValue(item);
-                            setGraphic(comboBox);
-                        }
-                    }
-                };
-            }
-        });
-
-        productAmountTableColumn.setCellValueFactory(cellData -> {
-                if(cellData.getValue().getRawMaterialProduct() == null) {
-                    return new SimpleStringProperty("0");
-                }
-
-                return new SimpleStringProperty(
-                        String.format(
-                                cellData.getValue().getRawMaterialProduct().getUnitMeasure().getIsInteger()
-                                        ? "%.0f"
-                                        : "%.2f",
-                                cellData.getValue().getAmount()
-                        )
-                );
-            }
+        rawMaterialProductReceptionTableColumn.setCellFactory(
+                CellFactory.productSearchableCombo(() -> rawMaterialProducts, ProductReceptionBasicResponse::setRawMaterialProduct)
         );
+
+        productAmountTableColumn.setCellValueFactory(CellValueFactory.receptionAmount(
+                ProductReceptionBasicResponse::getProduct
+        ));
         productAmountTableColumn.setEditable(true);
         productAmountTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        productAmountTableColumn.setOnEditCommit(event -> {
-            // Get the new value entered by the user
-            String newValue = event.getNewValue();
-            ProductReceptionBasicResponse editedItem = event.getRowValue();
+        productAmountTableColumn.setOnEditCommit(CellFactory.amountTextField(ProductReceptionBasicResponse::setAmount));
 
-            try {
-                double amount = Double.parseDouble(newValue);
-                editedItem.setAmount((float) amount); // Update the amount of the corresponding object
-
-                event.getTableView().refresh();
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid number format: " + newValue);
-            }
-        });
-
+        // Report table.
         rbReportTableColumn.setCellValueFactory(
                 cellData -> new SimpleStringProperty(
                         reportTable.getItems().indexOf(cellData.getValue()) + 1 + "."
@@ -248,17 +199,11 @@ public class ProductEditController {
                 cellData -> new SimpleStringProperty("-")
         );
 
-        dateReportTableColumn.setCellValueFactory(cellData -> {
-            String dateString = cellData.getValue().getReport().getDate(); // Assuming getDate() returns a String
-            if (dateString != null && !dateString.isEmpty()) {
-                LocalDate localDate = LocalDate.parse(dateString);
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMM yyyy");
-                String formattedDate = localDate.format(formatter);
-                return new SimpleStringProperty(formattedDate);
-            } else {
-                return new SimpleStringProperty("");
-            }
-        });
+        dateReportTableColumn.setCellValueFactory(
+                CellValueFactory.reportDate(
+                        (report) -> report.getReport().getDate()
+                )
+        );
 
         productAmountReportTableColumn.setCellValueFactory(
                 cellData -> new SimpleStringProperty("-")
@@ -343,6 +288,7 @@ public class ProductEditController {
             var receptionRequests = this.receptionTable
                     .getItems()
                     .stream()
+                    .filter((reception) -> reception.getRawMaterialProduct() != null)
                     .map(reception -> {
                         var req = new ProductReceptionUpdateRequest();
 
@@ -359,6 +305,8 @@ public class ProductEditController {
 
         this.load(product.getId());
         this.receptionTable.refresh();
+
+        this.notificationService.notifyUser("Uspješno sačuvan proizvod!");
     }
 
     private void reset() {

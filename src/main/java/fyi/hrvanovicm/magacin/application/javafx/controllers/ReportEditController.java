@@ -1,16 +1,18 @@
-package fyi.hrvanovicm.magacin.application.javafx;
+package fyi.hrvanovicm.magacin.application.javafx.controllers;
 
+import fyi.hrvanovicm.magacin.application.javafx.components.CellFactory;
+import fyi.hrvanovicm.magacin.application.javafx.components.CellValueFactory;
 import fyi.hrvanovicm.magacin.domain.products.ProductBasicResponse;
+import fyi.hrvanovicm.magacin.domain.products.ProductCategory;
 import fyi.hrvanovicm.magacin.domain.products.ProductService;
 import fyi.hrvanovicm.magacin.domain.products.ProductSpecification;
 import fyi.hrvanovicm.magacin.domain.report.ReportDetailsResponse;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductRequest;
 import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
 import fyi.hrvanovicm.magacin.domain.report.ReportService;
 import fyi.hrvanovicm.magacin.domain.report.ReportType;
-import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportCreateRequest;
-import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportUpdateRequest;
-import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportCreateRequest;
-import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportUpdateRequest;
+import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportRequest;
+import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportRequest;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureService;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -21,15 +23,27 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.web.HTMLEditor;
-import javafx.util.Callback;
 import net.rgielen.fxweaver.core.FxmlView;
-import org.controlsfx.control.SearchableComboBox;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.view.JasperViewer;
 import org.controlsfx.control.textfield.TextFields;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
+import java.io.InputStream;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @FxmlView("/views/report-edit.fxml")
@@ -37,6 +51,8 @@ public class ReportEditController {
     // Controller state.
     ReportDetailsResponse report;
     ReportType reportType;
+
+    private List<ProductBasicResponse> products;
 
     // FXML ReportEntity input.
     @FXML
@@ -69,6 +85,8 @@ public class ReportEditController {
     private Button resetChangesBtn;
     @FXML
     private Button deleteBtn;
+    @FXML
+    private Button pdfExportBtn;
 
     // FXML Reception table.
     @FXML
@@ -84,6 +102,9 @@ public class ReportEditController {
     private ProductService productService;
     private UnitMeasureService unitMeasureService;
 
+    @Value("classpath:pdf/receipt.jrxml")
+    Resource resourceFile;
+
     @Autowired
     private ReportService reportService;
 
@@ -95,6 +116,26 @@ public class ReportEditController {
     public void initialize() {
         productTable.setEditable(true);
 
+        this.pdfExportBtn.setOnAction(event -> {
+            try {
+                InputStream jrxmlInputStream = getClass().getClassLoader().getResourceAsStream("pdf/receipt.jrxml");
+                if (jrxmlInputStream == null) {
+                    System.out.println("Resource not found!");
+                    return;
+                }
+                JasperReport jasperReport = JasperCompileManager.compileReport(jrxmlInputStream);
+                List<ReportDetailsResponse> beans = new ArrayList<>();
+                beans.add(report);
+                JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(beans);
+                Map<String, Object> parameters = new HashMap<>();
+                parameters.put("title", "Your Custom Title");
+
+                JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+                JasperViewer.viewReport(jasperPrint, false);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
         var productTableContextMenu = new ContextMenu();
 
         var addNewRowMenuItem = new MenuItem("Dodaj proizvod");
@@ -104,7 +145,7 @@ public class ReportEditController {
 
             product.setAmount(Float.valueOf("0.0"));
 
-            productTable.getItems().add(0, product);
+            productTable.getItems().add(product);
         });
 
         var removeRowMenuItem = new MenuItem("Ukloni proizvod");
@@ -142,87 +183,31 @@ public class ReportEditController {
         );
 
         productNameTableColumn.setCellValueFactory(cellData ->
-                new SimpleObjectProperty<>(cellData.getValue().getProduct())
+                cellData.getValue().getProduct() != null ? new SimpleObjectProperty<>(cellData.getValue().getProduct()) : null
         );
         productNameTableColumn.setEditable(true);
-        productNameTableColumn.setCellFactory(new Callback<TableColumn<ReportProductResponse, ProductBasicResponse>, TableCell<ReportProductResponse, ProductBasicResponse>>() {
-            @Override
-            public TableCell<ReportProductResponse, ProductBasicResponse> call(
-                    TableColumn<ReportProductResponse,
-                            ProductBasicResponse> param
-            ) {
-                return new TableCell<>() {
-                    private SearchableComboBox<ProductBasicResponse> comboBox;
-
-                    @Override
-                    public void updateItem(ProductBasicResponse item, boolean empty) {
-                        super.updateItem(item, empty);
-
-                        if (empty) {
-                            setGraphic(null);
-                        } else {
-                            var rawMaterials = FXCollections.observableArrayList(
-                                    productService.getAll(ProductSpecification.isRawMaterial())
-                            );
-                            if (comboBox == null) {
-                                comboBox = new SearchableComboBox<>();
-                                comboBox.setItems(rawMaterials);
-                                comboBox.setEditable(true);
-                            }
-
-                            comboBox.valueProperty().addListener((observable, oldValue, newValue) -> {
-                                if (getTableRow() != null && getTableRow().getItem() != null) {
-                                    ReportProductResponse rowItem = getTableRow().getItem();
-                                    rowItem.setProduct(newValue);
-                                }
-                            });
-
-                            comboBox.setValue(item);
-                            setGraphic(comboBox);
-                        }
-                    }
-                };
-            }
-        });
+        productNameTableColumn.setCellFactory(CellFactory.productSearchableCombo(
+                () -> products,
+                ReportProductResponse::setProduct
+        ));
 
 
-        productAmountTableColumn.setCellValueFactory(cellData -> {
-                    if(cellData.getValue().getProduct() == null) {
-                        return new SimpleObjectProperty<>("0");
-                    }
-
-                    return new SimpleStringProperty(
-                            String.format(
-                                    cellData.getValue().getProduct().getUnitMeasure().getIsInteger()
-                                            ? "%.0f"
-                                            : "%.2f",
-                                    cellData.getValue().getAmount()
-                            )
-                    );
-                }
-        );
+        productAmountTableColumn.setCellValueFactory(CellValueFactory.productAmount());
 
         productAmountTableColumn.setEditable(true);
         productAmountTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
-        productAmountTableColumn.setOnEditCommit(event -> {
-            String newValue = event.getNewValue();
-            ReportProductResponse editedItem = event.getRowValue();
-
-            try {
-                double amount = Double.parseDouble(newValue);
-                editedItem.setAmount((float) amount);
-
-                event.getTableView().refresh();
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid number format: " + newValue);
-            }
-        });
+        productAmountTableColumn.setOnEditCommit(CellFactory.amountTextField(
+                ReportProductResponse::setAmount
+        ));
 
         this.saveBtn.setOnAction(event -> save());
         this.resetChangesBtn.setOnAction(event -> load(report.getId(), reportType));
     }
 
     public void load(Long reportId, ReportType reportType) {
+        this.products = this.productService.getAll(ProductSpecification.hasCategories(
+                List.of(ProductCategory.PRODUCT, ProductCategory.COMMERCIAL)
+        ));
         this.reportType = reportType;
 
         List<String> companyNames = this.reportService.getAllCompanyNames();
@@ -293,32 +278,9 @@ public class ReportEditController {
     }
 
     private void save() {
-        if (this.report == null) {
-            if(reportType == ReportType.RECEIPT) {
-                var request = new ReceiptReportCreateRequest();
-                request.setDate(this.signedOnDatePicker.getValue());
-                request.setSignedByName(this.signedByNameInput.getText());
-                request.setCode(this.codeInput.getText());
-                request.setDescriptionHtml(this.descriptionHtmlEditor.getHtmlText());
-                request.setPlaceOfPublish(this.signedOnPlaceInput.getText());
-                request.setSupplierReportCode(this.supplierReportCodeInput.getText());
-                request.setSupplierCompanyName(this.supplierCompanyNameInput.getText());
-
-            } else if (reportType == ReportType.SHIPMENT) {
-                var request = new ShipmentReportCreateRequest();
-                request.setDate(this.signedOnDatePicker.getValue());
-                request.setSignedByName(this.signedByNameInput.getText());
-                request.setCode(this.codeInput.getText());
-                request.setDescriptionHtml(this.descriptionHtmlEditor.getHtmlText());
-                request.setPlaceOfPublish(this.signedOnPlaceInput.getText());
-                request.setReceiptCompanyName(this.receiptCompanyNameInput.getText());
-            }
-
-            this.load(this.report.getId(), this.reportType);
-        }
-
         if(reportType == ReportType.RECEIPT) {
-            var request = new ReceiptReportUpdateRequest();
+            var request = new ReceiptReportRequest();
+
             request.setDate(this.signedOnDatePicker.getValue());
             request.setSignedByName(this.signedByNameInput.getText());
             request.setCode(this.codeInput.getText());
@@ -326,20 +288,56 @@ public class ReportEditController {
             request.setPlaceOfPublish(this.signedOnPlaceInput.getText());
             request.setSupplierReportCode(this.supplierReportCodeInput.getText());
             request.setSupplierCompanyName(this.supplierCompanyNameInput.getText());
+            request.setProducts(
+                    productTable.getItems()
+                            .stream()
+                            .filter(item -> item.getProduct() != null)
+                            .map(item -> {
+                                var req = new ReportProductRequest();
+                                req.setId(item.getId());
+                                req.setProductId(item.getProduct().getId());
+                                req.setAmount(item.getAmount());
+                                return req;
+                            })
+                            .collect(Collectors.toList())
+            );
 
-            this.reportService.updateReceipt(report.getId(), request);
+            if(report != null) {
+                request.setId(report.getId());
+            }
+
+            this.report = this.reportService.saveReceipt(request);
         } else if (reportType == ReportType.SHIPMENT) {
-            var request = new ShipmentReportUpdateRequest();
+            var request = new ShipmentReportRequest();
+
             request.setDate(this.signedOnDatePicker.getValue());
             request.setSignedByName(this.signedByNameInput.getText());
             request.setCode(this.codeInput.getText());
             request.setDescriptionHtml(this.descriptionHtmlEditor.getHtmlText());
             request.setPlaceOfPublish(this.signedOnPlaceInput.getText());
             request.setReceiptCompanyName(this.receiptCompanyNameInput.getText());
+            request.setProducts(
+                    productTable.getItems()
+                            .stream()
+                            .filter(item -> item.getProduct() != null)
+                            .map(item -> {
+                                var req = new ReportProductRequest();
+                                req.setId(item.getId());
+                                req.setProductId(item.getId());
+                                req.setAmount(item.getAmount());
+                                return req;
+                            })
+                            .collect(Collectors.toList())
+            );
 
-            this.reportService.updateShipment(report.getId(), request);
+            if(report != null) {
+                request.setId(report.getId());
+            }
+
+            this.report = this.reportService.saveShipment(request);
         }
 
         this.load(this.report.getId(), this.reportType);
+        this.productTable.refresh();
     }
 }

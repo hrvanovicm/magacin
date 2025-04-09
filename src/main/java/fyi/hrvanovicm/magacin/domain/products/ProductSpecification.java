@@ -14,8 +14,7 @@ public class ProductSpecification {
         return (root, query, builder) -> {
             return builder.or(
                     builder.like(root.get("name"), String.format("%%%s%%", keywords)),
-                    builder.like(root.get("code"), String.format("%s%%", keywords)),
-                    builder.like(root.get("description"), String.format("%%%s%%", keywords))
+                    builder.like(root.get("code"), String.format("%s%%", keywords))
             );
         };
     }

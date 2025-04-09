@@ -24,6 +24,7 @@ public class ReportResponse {
     @SuppressWarnings("DuplicatedCode")
     public static ReportResponse fromEntity(ReportEntity entity) {
         var dto = new ReportResponse();
+
         dto.setId(entity.getId());
         dto.setType(entity.getType());
         dto.setCode(entity.getCode());

@@ -1,4 +1,4 @@
-package fyi.hrvanovicm.magacin.application.javafx;
+package fyi.hrvanovicm.magacin.application.javafx.controllers;
 
 import fyi.hrvanovicm.magacin.domain.products.ProductService;
 import fyi.hrvanovicm.magacin.domain.report.*;

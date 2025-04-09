@@ -51,7 +51,7 @@ public class ProductEntity {
     @Column(columnDefinition = "DECIMAL(10,2)", nullable = true)
     private Float inStockWarningAmount;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductReceptionEntity> receptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
@@ -59,4 +59,9 @@ public class ProductEntity {
 
     @Embedded
     private Audit audit;
+
+    @Override
+    public String toString() {
+        return this.name + " ( " + this.code + " )";
+    }
 }

@@ -45,7 +45,7 @@ public class ReportDetailsResponse {
             dto.setReceipt(ReceiptReportResponse.fromEntity(entity.getReceiptReport()));
         }
         dto.setProducts(
-                entity.getReportProducts().stream().map(ReportProductResponse::fromEntity).collect(Collectors.toList())
+                entity.getProducts().stream().map(ReportProductResponse::fromEntity).collect(Collectors.toList())
         );
 
         return dto;

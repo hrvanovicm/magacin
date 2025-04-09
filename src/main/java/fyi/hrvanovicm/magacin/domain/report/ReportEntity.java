@@ -46,9 +46,14 @@ public class ReportEntity {
     @OneToOne(mappedBy = "report", cascade = CascadeType.ALL)
     private ShipmentReportEntity shipmentReport;
 
-    @OneToMany(mappedBy = "report", fetch = FetchType.EAGER)
-    private List<ReportProductEntity> reportProducts = new ArrayList<>();
+    @OneToMany(mappedBy = "report", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<ReportProductEntity> products = new ArrayList<>();
 
     @Embedded
     private Audit audit;
+
+    @Override
+    public String toString() {
+        return this.code;
+    }
 }

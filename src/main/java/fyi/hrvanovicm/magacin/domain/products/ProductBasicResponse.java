@@ -45,6 +45,6 @@ public class ProductBasicResponse {
 
     @Override
     public String toString() {
-        return getName();
+        return this.name + " ( " + this.code + " )";
     }
 }

@@ -32,7 +32,7 @@ public final class ProductReceptionUpdateRequest {
     ) {
         var entity = new ProductReceptionEntity();
 
-        entity.setId(product.getId());
+        entity.setId(receptionId);
         entity.setProduct(product);
         entity.setRawMaterialProduct(rawMaterialProduct);
         entity.setAmount(amount);

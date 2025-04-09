@@ -94,7 +94,9 @@ public class ProductService {
            return request.toEntity(product, rawMaterialProduct);
         }).collect(Collectors.toList());
 
-        product.setReceptions(receptions);
+        product.getReceptions().clear();
+        product.getReceptions().addAll(receptions);
+
         repository.save(product);
     }
 

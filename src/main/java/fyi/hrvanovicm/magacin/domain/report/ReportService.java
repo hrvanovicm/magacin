@@ -1,9 +1,11 @@
 package fyi.hrvanovicm.magacin.domain.report;
 
-import fyi.hrvanovicm.magacin.domain.products.ProductBasicResponse;
-import fyi.hrvanovicm.magacin.domain.products.ProductUpdateRequest;
-import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportUpdateRequest;
-import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportUpdateRequest;
+import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
+import fyi.hrvanovicm.magacin.domain.products.ProductRepository;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductEntity;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductRequest;
+import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportRequest;
+import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +20,12 @@ import java.util.stream.Collectors;
 @Component
 public class ReportService {
     final ReportRepository reportRepository;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public ReportService(ReportRepository reportRepository) {
+    public ReportService(ReportRepository reportRepository, ProductRepository productRepository) {
         this.reportRepository = reportRepository;
+        this.productRepository = productRepository;
     }
 
     public List<ReportResponse> getAll(Specification<ReportEntity> specs) {
@@ -56,12 +60,32 @@ public class ReportService {
                 .orElseThrow();
     }
 
-    @Transactional
-    public ReportDetailsResponse updateReceipt(
-            @NotNull Long reportId,
-            @Valid ReceiptReportUpdateRequest request
+    private void saveProducts(
+            ReportEntity report,
+            @Valid List<ReportProductRequest> request
     ) {
-        var report = reportRepository.findById(reportId).orElseThrow();
+        List<ReportProductEntity> products = request.stream().map(req -> {
+            ProductEntity product = productRepository.findById(req.getProductId()).orElseThrow();
+
+           var productEntity = new ReportProductEntity();
+           productEntity.setId(req.getId());
+           productEntity.setReport(report);
+           productEntity.setProduct(product);
+           productEntity.setAmount(req.getAmount());
+
+           return productEntity;
+        }).collect(Collectors.toList());
+
+        report.setProducts(products);
+    }
+
+    @Transactional
+    public ReportDetailsResponse saveReceipt(
+        @Valid ReceiptReportRequest request
+    ) {
+        ReportEntity report = (request.getId() == null)
+                ? new ReportEntity()
+                : reportRepository.findById(request.getId()).orElseThrow();
 
         report.setCode(request.getCode());
         report.setDate(request.getDate().toString());
@@ -72,17 +96,19 @@ public class ReportService {
         report.getReceiptReport().setSupplierCompanyName(request.getSupplierCompanyName());
         report.getReceiptReport().setSupplierReportCode(request.getSupplierReportCode());
 
+        this.saveProducts(report, request.getProducts());
         reportRepository.save(report);
 
         return ReportDetailsResponse.fromEntity(report);
     }
 
     @Transactional
-    public ReportDetailsResponse updateShipment(
-            @NotNull Long reportId,
-            @Valid ShipmentReportUpdateRequest request
+    public ReportDetailsResponse saveShipment(
+            @Valid ShipmentReportRequest request
     ) {
-        var report = reportRepository.findById(reportId).orElseThrow();
+        ReportEntity report = (request.getId() == null)
+                ? new ReportEntity()
+                : reportRepository.findById(request.getId()).orElseThrow();
 
         report.setCode(request.getCode());
         report.setDate(request.getDate().toString());
@@ -92,6 +118,9 @@ public class ReportService {
 
         report.getShipmentReport().setReceiptCompanyName(request.getReceiptCompanyName());
 
+        reportRepository.save(report);
+
+        this.saveProducts(report, request.getProducts());
         reportRepository.save(report);
 
         return ReportDetailsResponse.fromEntity(report);
