@@ -1,5 +1,7 @@
 # Self-Hosted Warehouse App with Desktop Support
 
+"The code is functional, but it needs optimization for better performance and efficiency."
+
 This is a self-hosted warehouse management application built with **Spring** and **JavaFX** for desktop support.
 
 ### Why Spring?
