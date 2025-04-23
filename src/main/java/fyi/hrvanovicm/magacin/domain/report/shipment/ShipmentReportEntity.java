@@ -15,7 +15,7 @@ public class ShipmentReportEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
     @JoinColumn(nullable = false, unique = true)
     private ReportEntity report;
 

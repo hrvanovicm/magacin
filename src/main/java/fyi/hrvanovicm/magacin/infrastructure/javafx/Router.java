@@ -1,5 +1,6 @@
 package fyi.hrvanovicm.magacin.infrastructure.javafx;
 
+import fyi.hrvanovicm.magacin.application.javafx.controllers.AutoLoadController;
 import fyi.hrvanovicm.magacin.application.javafx.controllers.ScaffoldContoller;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -25,16 +26,18 @@ public class Router {
         this.fxWeaver = fxWeaver;
     }
 
-    public void navigateTo(Class<?> controller) {
+    public <C> void navigateTo(Class<C> controller) {
         this.navigateTo(controller, null);
     }
 
-    public void navigateTo(Class<?> controller, Consumer<Object> initState) {
+    public <C> void navigateTo(Class<C> controller, Consumer<C> initState) {
         var fxController = fxWeaver.load(controller);
         var fxBaseController = fxWeaver.load(ScaffoldContoller.class);
 
         if(initState != null) {
             initState.accept(fxController.getController());
+        } else if(fxController.getController() instanceof AutoLoadController) {
+            ((AutoLoadController) fxController.getController()).load();
         }
 
         fxBaseController
@@ -45,9 +48,15 @@ public class Router {
         Optional<Node> view = fxBaseController.getView();
         view.ifPresent(node -> {
             Parent root = (Parent) node;
-            Scene scene = new Scene(root);
+
+            Scene scene = new Scene(root,  primaryStage.getWidth(), primaryStage.getHeight());
+
+            scene.getRoot().setStyle(
+                    String.format("-fx-width: %f; -fx-height: %f;", primaryStage.getWidth(), primaryStage.getHeight())
+            );
 
             primaryStage.setScene(scene);
+            primaryStage.sizeToScene();
             primaryStage.show();
         });
     }

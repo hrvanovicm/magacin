@@ -52,9 +52,9 @@ public class ReportSpecification {
         };
     }
 
-    public static Specification<ReportEntity> hasProducts(@NotEmpty List<Integer> productIds) {
+    public static Specification<ReportEntity> hasProduct(@NotEmpty Long productId) {
         return (root, query, builder) -> {
-            return root.join("products").get("id").in(productIds);
+            return builder.equal(root.join("products").join("product").get("id"), productId);
         };
     }
 }

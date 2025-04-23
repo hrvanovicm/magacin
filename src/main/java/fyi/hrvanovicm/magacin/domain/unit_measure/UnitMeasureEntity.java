@@ -1,21 +1,20 @@
 package fyi.hrvanovicm.magacin.domain.unit_measure;
 
-import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
 import fyi.hrvanovicm.magacin.domain.common.embedded.Audit;
+import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.SoftDeleteType;
-import org.hibernate.type.YesNoConverter;
+import org.hibernate.annotations.ColumnDefault;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @Entity
 @Table(name = "unit_measurements")
-public class UnitMeasure {
+public class UnitMeasureEntity {
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,14 +26,11 @@ public class UnitMeasure {
     @Column(nullable = false, length = UnitMeasureValidationUtils.SHORTNAME_MAX_CHARACTERS)
     String shortName;
 
-    @OneToMany(
-        mappedBy = "unitMeasure",
-        cascade = CascadeType.ALL,
-        fetch = FetchType.LAZY
-    )
-    Set<ProductEntity> products = new HashSet<>();
+    @OneToMany(mappedBy = "unitMeasure", cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
+    List<ProductEntity> products = new ArrayList<>();
 
     @Column(nullable = false)
+    @ColumnDefault("false")
     Boolean isInteger;
 
     @Embedded

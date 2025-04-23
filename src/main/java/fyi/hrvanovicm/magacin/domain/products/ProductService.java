@@ -2,7 +2,6 @@ package fyi.hrvanovicm.magacin.domain.products;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionUpdateRequest;
@@ -11,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,29 +32,30 @@ public class ProductService {
         this.unitMeasureService = unitMeasureService;
     }
 
-    public List<ProductBasicResponse> getAll(Specification<ProductEntity> specs) {
+    @Transactional(readOnly = true)
+    public List<ProductDTO> getAll() {
+        return this.getAll(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductDTO> getAll(Specification<ProductEntity> specs) {
         return repository
             .findAll(specs)
             .stream()
-            .map(ProductBasicResponse::fromEntity)
-            .toList();
+            .map(ProductDTO::fromEntity)
+            .collect(Collectors.toList());
     }
 
-    public Page<ProductBasicResponse> getAll(
-        Specification<ProductEntity> specs,
-        Pageable pageable
-    ) {
+    @Transactional(readOnly = true)
+    public ProductDetailsDTO getById(long productId) {
         return repository
-            .findAll(specs, pageable)
-            .map(ProductBasicResponse::fromEntity);
-    }
-
-    public ProductDetailsResponse getById(long productId) {
-        return repository.findById(productId).map(ProductDetailsResponse::fromEntity).orElse(null);
+                .findById(productId)
+                .map(ProductDetailsDTO::fromEntity)
+                .orElse(null);
     }
 
     @Transactional
-    public ProductBasicResponse create(@Valid ProductCreateRequest request) {
+    public ProductDetailsDTO create(@Valid ProductRequest request) {
         var unitMeasure = unitMeasureService
             .getById(request.getJmId())
             .orElseThrow()
@@ -64,13 +65,13 @@ public class ProductService {
 
         repository.save(product);
 
-        return ProductBasicResponse.fromEntity(product);
+        return ProductDetailsDTO.fromEntity(product);
     }
 
     @Transactional
-    public ProductBasicResponse update(
+    public ProductDetailsDTO update(
         @NotNull Long productId,
-        @Valid ProductUpdateRequest request
+        @Valid ProductRequest request
     ) {
         var unitMeasure = unitMeasureService
             .getById(request.getJmId())
@@ -80,7 +81,31 @@ public class ProductService {
 
         repository.save(product);
 
-        return ProductBasicResponse.fromEntity(product);
+        return ProductDetailsDTO.fromEntity(product);
+    }
+
+    @Transactional
+    public ProductDetailsDTO increaseStock(
+            @NotNull Long productId,
+            Float amount
+    ) {
+        var product = repository.findById(productId).orElseThrow();
+        product.setInStockAmount(product.getInStockAmount() + amount);
+        repository.save(product);
+
+        return ProductDetailsDTO.fromEntity(product);
+    }
+
+    @Transactional
+    public ProductDetailsDTO decreaseStock(
+            @NotNull Long productId,
+            Float amount
+    ) {
+        var product = repository.findById(productId).orElseThrow();
+        product.setInStockAmount(product.getInStockAmount() - amount);
+        repository.save(product);
+
+        return ProductDetailsDTO.fromEntity(product);
     }
 
     @Transactional
@@ -89,6 +114,7 @@ public class ProductService {
             List<ProductReceptionUpdateRequest> receptionRequests
     ) {
         var product = repository.findById(productId).orElseThrow();
+
         var receptions = receptionRequests.stream().map(request -> {
            var rawMaterialProduct = repository.findById(request.getRawMaterialId()).orElseThrow();
            return request.toEntity(product, rawMaterialProduct);
@@ -116,11 +142,5 @@ public class ProductService {
     public void delete(@NotNull Long id) {
         var product = repository.findById(id).orElseThrow();
         repository.delete(product);
-    }
-
-    @Transactional
-    public void forceDelete(@NotNull Long id) {
-        var product = repository.findById(id).orElseThrow();
-        repository.forceDeleteById(product.getId());
     }
 }

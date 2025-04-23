@@ -1,7 +1,7 @@
 package fyi.hrvanovicm.magacin.domain.report;
 
 import fyi.hrvanovicm.magacin.domain.common.embedded.AuditDTO;
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductDTO;
 import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportResponse;
 import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportResponse;
 import lombok.Getter;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReportDetailsResponse {
+public class ReportDetails {
     Long id;
     ReportType type;
     String code;
@@ -25,11 +25,12 @@ public class ReportDetailsResponse {
     AuditDTO audit;
     ShipmentReportResponse shipment;
     ReceiptReportResponse receipt;
-    List<ReportProductResponse> products;
+    List<ReportProductDTO> products;
 
     @SuppressWarnings("DuplicatedCode")
-    public static ReportDetailsResponse fromEntity(ReportEntity entity) {
-        var dto = new ReportDetailsResponse();
+    public static ReportDetails fromEntity(ReportEntity entity) {
+        var dto = new ReportDetails();
+ 
         dto.setId(entity.getId());
         dto.setType(entity.getType());
         dto.setCode(entity.getCode());
@@ -45,7 +46,7 @@ public class ReportDetailsResponse {
             dto.setReceipt(ReceiptReportResponse.fromEntity(entity.getReceiptReport()));
         }
         dto.setProducts(
-                entity.getProducts().stream().map(ReportProductResponse::fromEntity).collect(Collectors.toList())
+                entity.getProducts().stream().map(ReportProductDTO::fromEntity).collect(Collectors.toList())
         );
 
         return dto;

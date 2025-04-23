@@ -9,6 +9,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @Entity
@@ -19,11 +22,14 @@ public class ReportProductEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private ReportEntity report;
 
     @ManyToOne(fetch = FetchType.EAGER)
     private ProductEntity product;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    List<ReportProductUsedReceptionsEntity> receptions = new ArrayList<>();
 
     @Column(columnDefinition = "DECIMAL(10,2)", nullable = false)
     @ColumnDefault(value = "0")

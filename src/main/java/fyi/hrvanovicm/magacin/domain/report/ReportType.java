@@ -6,13 +6,9 @@ public enum ReportType {
 
     @Override
     public String toString() {
-        switch (this) {
-            case RECEIPT:
-                return "Primka";
-            case SHIPMENT:
-                return "Otpremnica";
-            default:
-                return "Nije poznato";
-        }
+        return switch (this) {
+            case RECEIPT -> "Primka";
+            case SHIPMENT -> "Otpremnica";
+        };
     }
 }

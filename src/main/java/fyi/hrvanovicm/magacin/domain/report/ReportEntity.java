@@ -40,13 +40,13 @@ public class ReportEntity {
     @Column
     private String signedByName;
 
-    @OneToOne(mappedBy = "report", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, optional = true)
     private ReceiptReportEntity receiptReport;
 
-    @OneToOne(mappedBy = "report", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "report", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true, optional = true)
     private ShipmentReportEntity shipmentReport;
 
-    @OneToMany(mappedBy = "report", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "report", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReportProductEntity> products = new ArrayList<>();
 
     @Embedded

@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class DesktopApplication {
     public static void main(String[] args) {
+        // It's triggered because Jasper doesn't work.
         System.setProperty("java.awt.headless", "false");
+
         Application.launch(JavaFxApplication.class, args);
     }
 

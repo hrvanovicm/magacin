@@ -2,6 +2,7 @@ package fyi.hrvanovicm.magacin.domain.products.tag;
 
 import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
 import fyi.hrvanovicm.magacin.domain.common.embedded.Audit;
+import fyi.hrvanovicm.magacin.domain.products.ProductValidationRulesUtils;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,7 +26,7 @@ public class ProductTagEntity {
     @JoinColumn(name = "product_id")
     ProductEntity product;
 
-    @Column(nullable = false, length = NAME_MAX_CHARACTERS)
+    @Column(nullable = false, length = ProductValidationRulesUtils.TAG_MAX_CHARACTERS)
     String name;
 
     @Embedded

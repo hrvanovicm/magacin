@@ -1,10 +1,11 @@
 package fyi.hrvanovicm.magacin.application.javafx.controllers;
 
+import fyi.hrvanovicm.magacin.application.javafx.components.CellValueFactory;
+import fyi.hrvanovicm.magacin.domain.products.ProductDTO;
 import fyi.hrvanovicm.magacin.domain.products.ProductService;
 import fyi.hrvanovicm.magacin.domain.report.*;
 import fyi.hrvanovicm.magacin.infrastructure.javafx.Router;
 import jakarta.persistence.criteria.Predicate;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -18,15 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Component
 @FxmlView("/views/report-index.fxml")
-public class ReportIndexController {
+public class ReportIndexController implements AutoLoadController {
     @FXML
-    private TableView<ReportResponse> tableView;
+    private TableView<Report> tableView;
 
     @FXML
     private TextField filterSearchInput;
@@ -44,25 +43,34 @@ public class ReportIndexController {
     private SearchableComboBox<String> filterCompanyCombo;
 
     @FXML
-    private SearchableComboBox<String> filterProductCombo;
+    private SearchableComboBox<ProductDTO> filterProductCombo;
 
     @FXML
-    private TableColumn<ReportResponse, String> rbTableColumn;
+    private TableColumn<Report, String> rbTableColumn;
 
     @FXML
-    private TableColumn<ReportResponse, String> typeTableColumn;
+    private TableColumn<Report, String> typeTableColumn;
 
     @FXML
-    private TableColumn<ReportResponse, String> codeTableColumn;
+    private TableColumn<Report, String> codeTableColumn;
 
     @FXML
-    private TableColumn<ReportResponse, String> dateTableColumn;
+    private TableColumn<Report, String> dateTableColumn;
 
     @FXML
-    private TableColumn<ReportResponse, String> signedByTableColumn;
+    private TableColumn<Report, String> companyTableColumn;
+
+    @FXML
+    private TableColumn<Report, String> signedByTableColumn;
 
     @FXML
     private Label tableResultStatusInfo;
+
+    @FXML
+    private Button receiptCreateBtn;
+
+    @FXML
+    private Button shipmentCreateBtn;
 
     @FXML
     private Button refreshBtn;
@@ -71,16 +79,24 @@ public class ReportIndexController {
     private Button resetBtn;
 
     private final ReportService reportService;
+    private final ProductService productService;
+    private final Router router;
 
     @Autowired
-    private ProductService productService;
-
-    @Autowired
-    private Router router;
-
-    @Autowired
-    public ReportIndexController(ReportService reportService) {
+    public ReportIndexController(
+            ProductService productService,
+            ReportService reportService,
+            Router router
+    ) {
         this.reportService = reportService;
+        this.productService = productService;
+        this.router = router;
+    }
+
+    public void load(ReportType type) {
+        filterTypeChoice.getItems().add(type);
+        filterTypeChoice.getCheckModel().check(0);
+        this.load();
     }
 
     public void load() {
@@ -90,9 +106,13 @@ public class ReportIndexController {
             Predicate predicates = builder.conjunction();
 
             if(!filterSearchInput.getText().isBlank()) {
-             predicates = builder.and(predicates, ReportSpecification.search(filterSearchInput.getText()).toPredicate(root, query, builder));
+                predicates = builder.and(
+                        predicates,
+                        ReportSpecification
+                                .search(filterSearchInput.getText())
+                                .toPredicate(root, query, builder)
+                );
             }
-
             if(!filterTypeChoice.getCheckModel().isEmpty()) {
                 predicates = builder.and(
                         predicates,
@@ -101,11 +121,7 @@ public class ReportIndexController {
                                 .toPredicate(root, query, builder)
                 );
             }
-
-            if(
-                    filterDateFromCombo.getValue() != null
-                    || filterDateToCombo.getValue() != null
-            ) {
+            if(filterDateFromCombo.getValue() != null || filterDateToCombo.getValue() != null) {
                 predicates = builder.and(
                         predicates,
                         ReportSpecification
@@ -113,7 +129,6 @@ public class ReportIndexController {
                                 .toPredicate(root, query, builder)
                 );
             }
-
             if(filterCompanyCombo.getValue() != null) {
                 predicates = builder.and(
                         predicates,
@@ -122,14 +137,22 @@ public class ReportIndexController {
                                 .toPredicate(root, query, builder)
                 );
             }
+            if(filterProductCombo.getValue() != null) {
+                predicates = builder.and(
+                        predicates,
+                        ReportSpecification
+                                .hasProduct(filterProductCombo.getSelectionModel().getSelectedItem().getId())
+                                .toPredicate(root, query, builder)
+                );
+            }
 
             return predicates;
         };
 
-        ObservableList<ReportResponse> reports = FXCollections.observableArrayList(reportService.getAll(spec));
+        ObservableList<Report> reports = FXCollections.observableArrayList(reportService.getAll(spec));
         tableView.setItems(reports);
 
-        List<String> products = productService.getAllProductNames();
+        List<ProductDTO> products = productService.getAll();
         products.removeAll(filterProductCombo.getItems());
         filterProductCombo.getItems().addAll(products);
 
@@ -141,58 +164,41 @@ public class ReportIndexController {
         companyNames.removeAll(filterCompanyCombo.getItems());
         filterCompanyCombo.getItems().addAll(companyNames);
 
-        tableResultStatusInfo
-                .setText(String.format("Broj pronađenih rezultata: %d", reports.size()));
-
+        tableResultStatusInfo.setText(String.format("Broj pronađenih rezultata: %d", reports.size()));
 
         tableView.scrollTo(0);
     }
 
     public void initialize() {
+        // Table configurations.
         tableView.setEditable(false); // There is external view for resource create/update.
         tableView.setOnMouseClicked(event -> {
             if(event.getClickCount() == 2) {
-                ReportResponse report = tableView.getSelectionModel().getSelectedItem();
+                Report report = tableView.getSelectionModel().getSelectedItem();
                 if(report != null) {
                     this.router.navigateTo(ReportEditController.class, controller -> {
-                        ((ReportEditController) controller).load(report.getId(), report.getType());
+                        controller.load(report.getId(), report.getType());
                     });
                 }
             }
         });
 
-        rbTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(
-                        tableView.getItems().indexOf(cellData.getValue()) + 1 + "."
-                )
-        );
+        // Table value factory.
+        rbTableColumn.setCellValueFactory(CellValueFactory.sequenceNumber(tableView));
+        typeTableColumn.setCellValueFactory(CellValueFactory.reportType());
+        codeTableColumn.setCellValueFactory(CellValueFactory.reportCode());
+        dateTableColumn.setCellValueFactory(CellValueFactory.reportDate());
+        companyTableColumn.setCellValueFactory(CellValueFactory.reportCompanyName(e -> e));
+        signedByTableColumn.setCellValueFactory(CellValueFactory.reportSignedByName());
 
-        typeTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getType().toString())
-        );
-
-        codeTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getCode())
-        );
-
-        dateTableColumn.setCellValueFactory(cellData -> {
-                    String dateString = cellData.getValue().getDate();
-                    if (dateString != null && !dateString.isEmpty()) {
-                        LocalDate localDate = LocalDate.parse(dateString);
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMM yyyy");
-                        String formattedDate = localDate.format(formatter);
-                        return new SimpleStringProperty(formattedDate);
-                    } else {
-                        return new SimpleStringProperty("");
-                    }
-                });
-
-        signedByTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getSignedByName())
-        );
-
+        // Table action buttons.
+        receiptCreateBtn.setOnAction(event -> this.router.navigateTo(ReportEditController.class, controller -> {
+            controller.load(ReportType.RECEIPT);
+        }));
+        shipmentCreateBtn.setOnAction(event -> this.router.navigateTo(ReportEditController.class, controller -> {
+            controller.load(ReportType.SHIPMENT);
+        }));
         refreshBtn.setOnAction(event -> load());
-
         resetBtn.setOnAction(event -> {
             filterSearchInput.clear();
             filterProductCombo.getSelectionModel().clearSelection();
@@ -204,14 +210,12 @@ public class ReportIndexController {
             load();
         });
 
+        // Table filter controls.
         filterSearchInput.addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent event) -> load());
-
         filterProductCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> load());
         filterCompanyCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> load());
         filterTypeChoice.getCheckModel().getCheckedItems().addListener((ListChangeListener<? super ReportType>) observable -> load());
         filterDateFromCombo.setOnAction(event -> load());
         filterDateToCombo.setOnAction(event -> load());
-
-        load();
     }
 }

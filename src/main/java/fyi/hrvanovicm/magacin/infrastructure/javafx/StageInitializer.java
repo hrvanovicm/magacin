@@ -24,7 +24,7 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     public void onApplicationEvent(StageReadyEvent event) {
         Stage stage = event.getStage();
         stage.setWidth(1300);
-        stage.setHeight(900);
+        stage.setHeight(700);
         stage.setTitle(applicationTitle);
         stage.centerOnScreen();
         stage.show();

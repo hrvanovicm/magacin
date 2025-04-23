@@ -1,6 +1,7 @@
 package fyi.hrvanovicm.magacin.domain.products.reception;
 
-import fyi.hrvanovicm.magacin.domain.products.ProductBasicResponse;
+import fyi.hrvanovicm.magacin.domain.products.ProductDTO;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductUsedReceptionsEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,8 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProductReceptionBasicResponse {
     private Long id;
-    private ProductBasicResponse product;
-    private ProductBasicResponse rawMaterialProduct;
+
+
+    private ProductDTO rawMaterialProduct;
     private Float amount;
 
     @SuppressWarnings("DuplicatedCode")
@@ -17,8 +19,19 @@ public class ProductReceptionBasicResponse {
         ProductReceptionBasicResponse dto = new ProductReceptionBasicResponse();
 
         dto.setId(receptionEntity.getId());
-        dto.setProduct(ProductBasicResponse.fromEntity(receptionEntity.getProduct()));
-        dto.setRawMaterialProduct(ProductBasicResponse.fromEntity(receptionEntity.getRawMaterialProduct()));
+       // dto.setProduct(ProductDTO.fromEntity(receptionEntity.getProduct()));
+        dto.setRawMaterialProduct(ProductDTO.fromEntity(receptionEntity.getRawMaterialProduct()));
+        dto.setAmount(receptionEntity.getAmount());
+
+        return dto;
+    }
+
+    public static ProductReceptionBasicResponse fromEntity(ReportProductUsedReceptionsEntity receptionEntity) {
+        ProductReceptionBasicResponse dto = new ProductReceptionBasicResponse();
+
+        dto.setId(receptionEntity.getId());
+        // dto.setProduct(ProductDTO.fromEntity(receptionEntity.getProduct()));
+        dto.setRawMaterialProduct(ProductDTO.fromEntity(receptionEntity.getRawMaterialProduct()));
         dto.setAmount(receptionEntity.getAmount());
 
         return dto;

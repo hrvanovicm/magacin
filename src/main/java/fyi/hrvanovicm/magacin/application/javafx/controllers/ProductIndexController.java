@@ -1,9 +1,9 @@
 package fyi.hrvanovicm.magacin.application.javafx.controllers;
 
+import fyi.hrvanovicm.magacin.application.javafx.components.CellValueFactory;
 import fyi.hrvanovicm.magacin.domain.products.*;
 import fyi.hrvanovicm.magacin.infrastructure.javafx.Router;
 import jakarta.persistence.criteria.Predicate;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -20,12 +20,9 @@ import java.util.List;
 
 @Component
 @FxmlView("/views/product-index.fxml")
-public class ProductIndexController {
-    /**
-     * JavaFX relations.
-     */
+public class ProductIndexController implements AutoLoadController {
     @FXML
-    private TableView<ProductBasicResponse> tableView;
+    private TableView<ProductDTO> tableView;
 
     @FXML
     private TextField filterSearchInput;
@@ -40,25 +37,28 @@ public class ProductIndexController {
     private CheckBox filterAmountBelowWarningAmount;
 
     @FXML
-    private TableColumn<ProductBasicResponse, String> rbTableColumn;
+    private TableColumn<ProductDTO, String> rbTableColumn;
 
     @FXML
-    private TableColumn<ProductBasicResponse, String> nameTableColumn;
+    private TableColumn<ProductDTO, String> nameTableColumn;
 
     @FXML
-    private TableColumn<ProductBasicResponse, String> codeTableColumn;
+    private TableColumn<ProductDTO, String> codeTableColumn;
 
     @FXML
-    private TableColumn<ProductBasicResponse, String> categoryTableColumn;
+    private TableColumn<ProductDTO, String> categoryTableColumn;
 
     @FXML
-    private TableColumn<ProductBasicResponse, String> tagTableColumn;
+    private TableColumn<ProductDTO, String> tagTableColumn;
 
     @FXML
-    private TableColumn<ProductBasicResponse, String> inStockAmountTableColumn;
+    private TableColumn<ProductDTO, String> inStockAmountTableColumn;
 
     @FXML
     private Label tableResultStatusInfo;
+
+    @FXML
+    private Button createBtn;
 
     @FXML
     private Button refreshBtn;
@@ -66,7 +66,6 @@ public class ProductIndexController {
     @FXML
     private Button resetBtn;
 
-    // Spring injections.
     private final ProductService productService;
     private final Router router;
 
@@ -76,6 +75,19 @@ public class ProductIndexController {
         this.router = router;
     }
 
+    /**
+     * Load data but with predefined product category.
+     */
+    public void load(ProductCategory category) {
+        filterCategoryCombo.getItems().add(category);
+        filterCategoryCombo.getCheckModel().check(0);
+
+        this.load();
+    }
+
+    /**
+     * Load data but without predefined filters.
+     */
     public void load() {
         Specification<ProductEntity> spec = (root, query, builder) -> {
             Predicate predicates = builder.conjunction();
@@ -102,7 +114,7 @@ public class ProductIndexController {
                 predicates = builder.and(
                         predicates,
                         ProductSpecification
-                                .hasCategories(filterCategoryCombo.getCheckModel().getCheckedItems().stream().toList())
+                                .hasCategory(filterCategoryCombo.getCheckModel().getCheckedItems().stream().toList())
                                 .toPredicate(root, query, builder)
                 );
             }
@@ -119,7 +131,9 @@ public class ProductIndexController {
             return predicates;
         };
 
-        ObservableList<ProductBasicResponse> products = FXCollections.observableArrayList(this.productService.getAll(spec));
+        ObservableList<ProductDTO> products = FXCollections.observableArrayList(
+                this.productService.getAll(spec)
+        );
         tableView.setItems(products);
 
         List<String> tags = productService.getAllTagNames();
@@ -130,63 +144,42 @@ public class ProductIndexController {
         categories.removeAll(filterCategoryCombo.getItems()); // Don't duplicate items in combo.
         filterCategoryCombo.getItems().addAll(categories);
 
-        tableResultStatusInfo
-                .setText(String.format("Broj pronađenih rezultata: %d", products.size()));
+        tableResultStatusInfo.setText(
+                String.format("Broj pronađenih rezultata: %d", products.size())
+        );
 
         tableView.scrollTo(0);
     }
 
     public void initialize() {
+        // Table configurations.
         tableView.setEditable(false); // There is external view for resource create/update.
         tableView.setOnMouseClicked(event -> {
             if(event.getClickCount() == 2) {
-                ProductBasicResponse product = tableView.getSelectionModel().getSelectedItem();
+                ProductDTO product = tableView.getSelectionModel().getSelectedItem();
                 if(product != null) {
                     this.router.navigateTo(ProductEditController.class, controller -> {
-                        ((ProductEditController) controller).load(product.getId());
+                        controller.load(product.getId());
                     });
                 }
             }
         });
 
-        rbTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(
-                        tableView.getItems().indexOf(cellData.getValue()) + 1 + "."
-                )
-        );
+        // Table value factory.
+        rbTableColumn.setCellValueFactory(CellValueFactory.sequenceNumber(tableView));
+        nameTableColumn.setCellValueFactory(CellValueFactory.productName());
+        codeTableColumn.setCellValueFactory(CellValueFactory.productCode());
+        categoryTableColumn.setCellValueFactory(CellValueFactory.productCategory());
+        tagTableColumn.setCellValueFactory(CellValueFactory.productTag());
+        inStockAmountTableColumn.setCellValueFactory(CellValueFactory.amount(
+                p -> p,
+                ProductDTO::getInStockAmount,
+                true
+        ));
 
-        nameTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getName())
-        );
-
-        codeTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getCode())
-        );
-
-        categoryTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(cellData.getValue().getCategory().toString())
-        );
-
-        tagTableColumn.setCellValueFactory(
-                cellData -> new SimpleStringProperty(String.join(", ", cellData.getValue().getTags()))
-        );
-
-        inStockAmountTableColumn.setCellValueFactory(
-                cellData -> {
-                    if(cellData.getValue().getUnitMeasure().getIsInteger()) {
-                        return new SimpleStringProperty(
-                                String.format("%.0f (%s)", cellData.getValue().getInStockAmount(), cellData.getValue().getUnitMeasure().getShortName())
-                        );
-                    }
-
-                    return new SimpleStringProperty(
-                            String.format("%.2f (%s)", cellData.getValue().getInStockAmount(), cellData.getValue().getUnitMeasure().getShortName())
-                    );
-                }
-        );
-
+        // Table action buttons.
+        createBtn.setOnAction(event -> router.navigateTo(ProductEditController.class));
         refreshBtn.setOnAction(event -> load());
-
         resetBtn.setOnAction(event -> {
             filterSearchInput.clear();
             filterCategoryCombo.getCheckModel().clearChecks();
@@ -195,20 +188,16 @@ public class ProductIndexController {
             load();
         });
 
+        // Table filters.
         filterSearchInput.addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent event) -> load());
-
         filterCategoryCombo
                 .getCheckModel()
                 .getCheckedItems()
                 .addListener((ListChangeListener<? super ProductCategory>) observable -> load());
-
         filterTagCombo
                 .getSelectionModel()
                 .selectedItemProperty()
                 .addListener((observable, oldValue, newValue) -> load());
-
         filterAmountBelowWarningAmount.setOnAction(event -> load());
-
-        load();
     }
 }

@@ -4,7 +4,7 @@ import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionEntity;
 import fyi.hrvanovicm.magacin.domain.products.tag.ProductTagEntity;
 import fyi.hrvanovicm.magacin.domain.common.embedded.Audit;
 import fyi.hrvanovicm.magacin.domain.report.product.ReportProductEntity;
-import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasure;
+import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +26,7 @@ public class ProductEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "unit_measure_id", nullable = false)
-    private UnitMeasure unitMeasure;
+    private UnitMeasureEntity unitMeasure;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
     private List<ProductTagEntity> tags = new ArrayList<>();
@@ -48,20 +48,16 @@ public class ProductEntity {
     @ColumnDefault(value = "0")
     private Float inStockAmount;
 
-    @Column(columnDefinition = "DECIMAL(10,2)", nullable = true)
+    @Column(columnDefinition = "DECIMAL(10,2)", nullable = false)
+    @ColumnDefault(value = "0")
     private Float inStockWarningAmount;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductReceptionEntity> receptions = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<ReportProductEntity> reports = new ArrayList<>();
 
     @Embedded
     private Audit audit;
-
-    @Override
-    public String toString() {
-        return this.name + " ( " + this.code + " )";
-    }
 }

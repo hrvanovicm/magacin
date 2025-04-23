@@ -1,12 +1,8 @@
 package fyi.hrvanovicm.magacin.domain.products;
 
+import jakarta.persistence.criteria.JoinType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
-
 import org.springframework.data.jpa.domain.Specification;
-
 import java.util.List;
 
 public class ProductSpecification {
@@ -25,13 +21,13 @@ public class ProductSpecification {
         };
     }
 
-    public static Specification<ProductEntity> hasCategories(@NotEmpty List<ProductCategory> categories) {
+    public static Specification<ProductEntity> hasCategory(List<ProductCategory> categories) {
         return (root, query, builder) -> {
             return root.get("category").in(categories);
         };
     }
 
-    public static Specification<ProductEntity> hasTag(@NotEmpty String tagName) {
+    public static Specification<ProductEntity> hasTag(String tagName) {
         return (root, query, builder) -> {
             return builder.equal(root.join("tags").get("name"), tagName);
         };
@@ -43,10 +39,7 @@ public class ProductSpecification {
         };
     }
 
-    public static Specification<ProductEntity> inStockAmountBetween(
-        @NotNull @PositiveOrZero Float fromAmount,
-        @NotNull @PositiveOrZero Float toAmount
-    ) {
+    public static Specification<ProductEntity> inStockAmountBetween(Float fromAmount, Float toAmount) {
         return (root, query, builder) -> {
             if (fromAmount != null && toAmount != null) {
                 return builder.between(root.get("inStockAmount"), fromAmount, toAmount);
@@ -55,6 +48,20 @@ public class ProductSpecification {
             } else {
                 return builder.lessThanOrEqualTo(root.get("inStockAmount"), toAmount);
             }
+        };
+    }
+
+    public static Specification<ProductEntity> withReceptions() {
+        return (root, query, builder) -> {
+        //  root.fetch("receptions", JoinType.LEFT);
+          return builder.conjunction();
+        };
+    }
+
+    public static Specification<ProductEntity> withReports() {
+        return (root, query, builder) -> {
+           // root.fetch("reports", JoinType.LEFT);
+            return builder.conjunction();
         };
     }
 }

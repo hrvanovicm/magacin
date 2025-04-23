@@ -1,5 +1,7 @@
 package fyi.hrvanovicm.magacin.application.javafx.controllers;
 
+import fyi.hrvanovicm.magacin.domain.products.ProductCategory;
+import fyi.hrvanovicm.magacin.domain.report.ReportType;
 import fyi.hrvanovicm.magacin.infrastructure.javafx.Router;
 import fyi.hrvanovicm.magacin.infrastructure.notification.NotificationEvent;
 import javafx.animation.PauseTransition;
@@ -41,7 +43,7 @@ public class ScaffoldContoller {
     public MenuItem menuShipmentReportBtn;
 
     @FXML
-    public MenuItem menuProductsBtn;
+    public MenuItem menuUnitMeasureBtn;
 
     /**
      * Services.
@@ -58,23 +60,37 @@ public class ScaffoldContoller {
 
     public void initialize() {
         this.menuProductBtn.setOnAction(e -> {
-           this.router.navigateTo(ProductIndexController.class);
+           this.router.navigateTo(ProductIndexController.class, (controller) -> {
+               controller.load(ProductCategory.PRODUCT);
+           });
         });
 
         this.menuCommercialProductBtn.setOnAction(e -> {
-            this.router.navigateTo(ProductIndexController.class);
+            this.router.navigateTo(ProductIndexController.class, (controller) -> {
+                controller.load(ProductCategory.COMMERCIAL);
+            });
         });
 
         this.menuRawMaterialProductBtn.setOnAction(e -> {
-            this.router.navigateTo(ProductIndexController.class);
+            this.router.navigateTo(ProductIndexController.class, (controller) -> {
+                controller.load(ProductCategory.RAW_MATERIAL);
+            });
         });
 
         this.menuReceiptReportBtn.setOnAction(e -> {
-            this.router.navigateTo(ReportIndexController.class);
+            this.router.navigateTo(ReportIndexController.class, (controller) -> {
+                controller.load(ReportType.RECEIPT);
+            });
         });
 
         this.menuShipmentReportBtn.setOnAction(e -> {
-            this.router.navigateTo(ReportIndexController.class);
+            this.router.navigateTo(ReportIndexController.class, (controller) -> {
+                controller.load(ReportType.SHIPMENT);
+            });
+        });
+
+        this.menuUnitMeasureBtn.setOnAction(e -> {
+            this.router.navigateTo(UnitMeasureIndexController.class);
         });
     }
 

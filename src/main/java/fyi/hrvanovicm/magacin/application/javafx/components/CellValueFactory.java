@@ -1,72 +1,142 @@
 package fyi.hrvanovicm.magacin.application.javafx.components;
 
-import fyi.hrvanovicm.magacin.domain.products.ProductBasicResponse;
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
+import fyi.hrvanovicm.magacin.domain.products.ProductDTO;
+import fyi.hrvanovicm.magacin.domain.report.Report;
+import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.util.Callback;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class CellValueFactory {
-    public static Callback<
-                TableColumn.CellDataFeatures<ReportProductResponse, String>,
-                ObservableValue<String>>
-    productAmount() {
-        return cellData -> {
-            if(cellData.getValue().getProduct() == null) {
-                return new SimpleObjectProperty<>("0");
-            }
 
-            return new SimpleStringProperty(
-                    String.format(
-                            cellData.getValue().getProduct().getUnitMeasure().getIsInteger()
-                                    ? "%.0f"
-                                    : "%.2f",
-                            cellData.getValue().getAmount()
-                    )
-            );
-        };
+    public static <T> Callback<TableColumn.CellDataFeatures<T, String>, ObservableValue<String>> sequenceNumber(TableView<?> tableView) {
+        return cellData -> new SimpleStringProperty(
+                tableView.getItems().indexOf(cellData.getValue()) + 1 + "."
+        );
     }
 
-    public static Callback<
-            TableColumn.CellDataFeatures<ProductReceptionBasicResponse, String>,
-            ObservableValue<String>>
-    receptionAmount(
-            Function<ProductReceptionBasicResponse, ProductBasicResponse> productCallback
+    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureResponse, String>, ObservableValue<String>> unitMeasureName() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getName());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureResponse, String>, ObservableValue<String>> unitMeasureShortName() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getShortName());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureResponse, Boolean>, ObservableValue<Boolean>> unitMeasureIsInteger() {
+        return cellData -> new SimpleBooleanProperty(cellData.getValue().getIsInteger());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<T, ProductDTO>, ObservableValue<ProductDTO>> product(
+            Function<T, ProductDTO> productCallback
+    ) {
+        return cellData -> new SimpleObjectProperty<>(productCallback.apply(cellData.getValue()));
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<ProductDTO, String>, ObservableValue<String>> productName() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getName());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<ProductDTO, String>, ObservableValue<String>> productCode() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getCode());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<ProductDTO, String>, ObservableValue<String>> productCategory() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getCategory().toString());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<ProductDTO, String>, ObservableValue<String>> productTag() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getCategory().toString());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<Report, String>, ObservableValue<String>> reportType() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getType().toString());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<T, String>, ObservableValue<String>> reportType(
+            Function<T, Report> reportExtractor
+    ) {
+        return cellData -> new SimpleStringProperty(reportExtractor.apply(cellData.getValue()).getType().toString());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<Report, String>, ObservableValue<String>> reportCode() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getCode());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<T, String>, ObservableValue<String>> reportCode(
+            Function<T, Report> reportExtractor
+    ) {
+        return cellData -> new SimpleStringProperty(reportExtractor.apply(cellData.getValue()).getCode());
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<T, String>, ObservableValue<String>> unitMeasure(
+            Function<T, ProductDTO> reportExtractor
     ) {
         return cellData -> {
-            var value = cellData.getValue();
-            var product = productCallback.apply(value);
+            var product = reportExtractor.apply(cellData.getValue());
 
-            if(product == null) {
-                return new SimpleObjectProperty<>("0");
-            }
-
-            if(product.getUnitMeasure() == null) {
-                return new SimpleStringProperty(String.format("%.2f", cellData.getValue().getAmount()));
+            if(product == null || product.getUnitMeasure() == null) {
+                return new SimpleStringProperty("-");
             }
 
             return new SimpleStringProperty(
-                    String.format(
-                            product.getUnitMeasure().getIsInteger()
-                                    ? "%.0f"
-                                    : "%.2f",
-                            cellData.getValue().getAmount()
-                    )
+                    reportExtractor.apply(cellData.getValue()).getUnitMeasure().toString()
             );
         };
     }
 
-    public static <S> Callback<TableColumn.CellDataFeatures<S, String>, ObservableValue<String>>
-        reportDate(Function<S, String> dateExtractor) {
+    public static <T> Callback<TableColumn.CellDataFeatures<T, String>, ObservableValue<String>> reportSupplierCode(
+            Function<T, Report> reportExtractor
+    ) {
         return cellData -> {
-            String dateString = dateExtractor.apply(cellData.getValue());
+            var report = reportExtractor.apply(cellData.getValue());
+
+            if(report.getReceipt() == null) {
+                return new SimpleStringProperty("-");
+            }
+
+            return new SimpleStringProperty(
+                    report.getReceipt().getSupplierReportCode()
+            );
+        };
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<T, String>, ObservableValue<String>> reportCompanyName(
+            Function<T, Report> reportExtractor
+    ) {
+        return cellData -> {
+            var report = reportExtractor.apply(cellData.getValue());
+
+            if(report.getReceipt() != null) {
+                return new SimpleStringProperty(
+                        report.getReceipt().getSupplierCompanyName()
+                );
+            }
+
+            return new SimpleStringProperty(
+                    report.getShipment().getReceiptCompanyName()
+            );
+        };
+    }
+
+    public static Callback<TableColumn.CellDataFeatures<Report, String>, ObservableValue<String>> reportDate() {
+        return CellValueFactory.reportDate(v -> v);
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<T, String>, ObservableValue<String>> reportDate(
+            Function<T, Report> reportExtractor
+    ) {
+        return cellData -> {
+            String dateString = reportExtractor.apply(cellData.getValue()).getDate();
             if (dateString != null && !dateString.isEmpty()) {
                 LocalDate localDate = LocalDate.parse(dateString);
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d. MMM yyyy");
@@ -75,6 +145,36 @@ public class CellValueFactory {
             } else {
                 return new SimpleStringProperty("");
             }
+        };
+    }
+
+    public static <T> Callback<TableColumn.CellDataFeatures<Report, String>, ObservableValue<String>> reportSignedByName() {
+        return cellData -> new SimpleStringProperty(cellData.getValue().getSignedByName());
+    }
+
+    public static <T> Callback<
+            TableColumn.CellDataFeatures<T, String>,
+            ObservableValue<String>>
+    amount(
+            Function<T, ProductDTO> productExtractor,
+            Function<T, Float> amountExtractor,
+            boolean showUnitMeasure
+    ) {
+        return cellData -> {
+            var product = productExtractor.apply(cellData.getValue());
+            var amount = amountExtractor.apply(cellData.getValue());
+
+            if(product == null || !Objects.requireNonNull(product.getUnitMeasure()).getIsInteger()) {
+                return new SimpleStringProperty(
+                        String.format("%.2f", amount)
+                );
+            }
+
+            var unitMeasureVal = !showUnitMeasure ? "" : product.getUnitMeasure().toString();
+
+            return new SimpleStringProperty(
+                    String.format("%.0f %s", amount,unitMeasureVal)
+            );
         };
     }
 }

@@ -4,6 +4,7 @@ import fyi.hrvanovicm.magacin.domain.report.ReportEntity;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Data
 @NoArgsConstructor
@@ -15,12 +16,16 @@ public class ReceiptReportEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
     @JoinColumn(nullable = false, unique = true)
     private ReportEntity report;
 
     @Column
     private String supplierCompanyName;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private Boolean isSupplierProduction;
 
     @Column
     private String supplierReportCode;

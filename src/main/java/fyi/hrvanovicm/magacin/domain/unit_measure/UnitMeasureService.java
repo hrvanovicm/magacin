@@ -1,18 +1,15 @@
 package fyi.hrvanovicm.magacin.domain.unit_measure;
 
-import java.util.List;
-import java.util.Optional;
-
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+
 @Component
 public class UnitMeasureService {
-
     private final UnitMeasureRepository unitMeasureRepository;
 
     @Autowired
@@ -21,43 +18,28 @@ public class UnitMeasureService {
     }
 
     public List<UnitMeasureResponse> getAll() {
-        return this.unitMeasureRepository.findAll()
-            .stream()
-            .map(UnitMeasureResponse::fromEntity)
-            .toList();
+        return this.unitMeasureRepository.findAll().stream().map(UnitMeasureResponse::fromEntity).toList();
     }
 
-    public Optional<UnitMeasureResponse> getById(@NotNull Long id) {
+    public Optional<UnitMeasureResponse> getById(Long id) {
         return this.unitMeasureRepository.findById(id).map(UnitMeasureResponse::fromEntity);
     }
 
     @Transactional
-    public UnitMeasureResponse create(@Valid UnitMeasureCreateRequestDTO createRequest) {
-        var createdEntity = this.unitMeasureRepository.save(createRequest.toEntity());
-        return UnitMeasureResponse.fromEntity(createdEntity);
+    public void save(@Valid UnitMeasureRequest request) {
+        var unitMeasure = Optional.ofNullable(request.getId()).flatMap(unitMeasureRepository::findById).orElse(new UnitMeasureEntity());
+
+        unitMeasure.setName(request.getName());
+        unitMeasure.setShortName(request.getShortName());
+        unitMeasure.setIsInteger(request.getIsInteger());
+
+        this.unitMeasureRepository.save(unitMeasure);
     }
 
     @Transactional
-    public UnitMeasureResponse update(@NotNull Long id, @Valid UnitMeasureUpdateRequestDTO request) {
-        boolean entityExists = this.unitMeasureRepository.existsById(id);
+    public void delete(Long id) {
+        var unitMeasure = Optional.ofNullable(id).flatMap(unitMeasureRepository::findById).orElseThrow();
 
-        if (!entityExists) {
-            throw new EntityNotFoundException(String.format("Unit measure with id %d not found", id));
-        }
-
-        var updatedEntity = this.unitMeasureRepository.save(request.toEntity(id));
-        return UnitMeasureResponse.fromEntity(updatedEntity);
-    }
-
-    @Transactional
-    public void delete(@NotNull Long id) {
-        var entity = this.unitMeasureRepository.findById(id).orElseThrow();
-        this.unitMeasureRepository.deleteById(entity.getId());
-    }
-
-    @Transactional
-    public void forceDelete(@NotNull Long id) {
-        var entity = this.unitMeasureRepository.findById(id).orElseThrow();
-        this.unitMeasureRepository.forceDeleteById(entity.getId());
+        this.unitMeasureRepository.deleteById(unitMeasure.getId());
     }
 }

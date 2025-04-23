@@ -1,32 +1,11 @@
 package fyi.hrvanovicm.magacin.domain.report.shipment;
 
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductEntity;
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductRequest;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
+import fyi.hrvanovicm.magacin.domain.report.ReportRequest;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDate;
-import java.util.List;
-
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class ShipmentReportRequest {
-    @PositiveOrZero
-    Long id;
-
-    @NotBlank
-    String code;
-
-    @NotBlank
-    LocalDate date;
-
-    String descriptionHtml;
-
-    String placeOfPublish;
-
-    String signedByName;
-
+public class ShipmentReportRequest extends ReportRequest {
     String receiptCompanyName;
-
-    List<ReportProductRequest> products;
 }

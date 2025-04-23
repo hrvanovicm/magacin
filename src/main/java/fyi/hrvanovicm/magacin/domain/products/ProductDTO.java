@@ -1,21 +1,19 @@
 package fyi.hrvanovicm.magacin.domain.products;
 
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
+import fyi.hrvanovicm.magacin.domain.products.reports.ProductReportDTO;
 import fyi.hrvanovicm.magacin.domain.products.tag.ProductTagEntity;
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductResponse;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
 import fyi.hrvanovicm.magacin.domain.common.embedded.AuditDTO;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
-public class ProductDetailsResponse {
+public class ProductDTO {
     private Long id;
     private String name;
     private ProductCategory category;
@@ -26,46 +24,41 @@ public class ProductDetailsResponse {
     private Boolean lowInStockAmount;
     private UnitMeasureResponse unitMeasure;
     private List<String> tags;
-    private List<ReportProductResponse> reports;
+    private List<ProductReportDTO> reports;
     private List<ProductReceptionBasicResponse> receptions;
     private AuditDTO audit;
 
     @SuppressWarnings("DuplicatedCode")
-    public static ProductDetailsResponse fromEntity(ProductEntity productEntity) {
-        ProductDetailsResponse dto = new ProductDetailsResponse();
+    public static ProductDTO fromEntity(ProductEntity productEntity) {
+        ProductDTO dto = new ProductDTO();
 
         dto.setId(productEntity.getId());
-        dto.setDescriptionHtml(productEntity.getDescriptionHtml());
         dto.setCategory(productEntity.getCategory());
         dto.setName(productEntity.getName());
-        dto.setInStockWarningAmount(productEntity.getInStockWarningAmount());
         dto.setCode(productEntity.getCode());
-        dto.setReceptions(
-                productEntity.getReceptions()
-                        .stream()
-                        .map(ProductReceptionBasicResponse::fromEntity)
-                        .toList()
+        dto.setLowInStockAmount(
+                productEntity.getInStockAmount() != null && productEntity.getInStockAmount() <= productEntity.getInStockAmount()
         );
-        dto.setReports(productEntity.getReports().stream().map(ReportProductResponse::fromEntity).collect(Collectors.toList()));
         dto.setInStockAmount(productEntity.getInStockAmount());
         dto.setUnitMeasure(UnitMeasureResponse.fromEntity(productEntity.getUnitMeasure()));
         dto.setLowInStockAmount(
                 productEntity.getInStockAmount() != null && productEntity.getInStockAmount() <= productEntity.getInStockAmount()
         );
-        dto.setTags(productEntity.getTags().stream().map(ProductTagEntity::getName).collect(Collectors.toList()));
+        dto.setReports(productEntity.getReports().stream()
+                .map(ProductReportDTO::fromEntity)
+                .collect(Collectors.toList()));
+        dto.setReceptions(productEntity.getReceptions().stream()
+                .map(ProductReceptionBasicResponse::fromEntity)
+                .collect(Collectors.toList()));
+        dto.setTags(productEntity.getTags().stream()
+                .map(ProductTagEntity::getName)
+                .collect(Collectors.toList()));
 
         return dto;
     }
 
-    public ProductBasicResponse toBasicResponse() {
-        var productBasicResponse = new ProductBasicResponse();
-        productBasicResponse.setId(this.getId());
-        productBasicResponse.setName(this.getName());
-        productBasicResponse.setTags(this.getTags());
-        productBasicResponse.setCategory(this.getCategory());
-        productBasicResponse.setCode(this.getCode());
-        productBasicResponse.setAudit(this.getAudit());
-
-        return productBasicResponse;
+    @Override
+    public String toString() {
+        return this.name + " ( " + this.code + " )";
     }
 }

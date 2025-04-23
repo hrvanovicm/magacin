@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ReportResponse {
+public class Report {
     Long id;
     ReportType type;
     String code;
@@ -22,8 +22,8 @@ public class ReportResponse {
     ReceiptReportResponse receipt;
 
     @SuppressWarnings("DuplicatedCode")
-    public static ReportResponse fromEntity(ReportEntity entity) {
-        var dto = new ReportResponse();
+    public static Report fromEntity(ReportEntity entity) {
+        var dto = new Report();
 
         dto.setId(entity.getId());
         dto.setType(entity.getType());
@@ -32,6 +32,7 @@ public class ReportResponse {
         dto.setPlaceOfPublish(entity.getPlaceOfPublish());
         dto.setSignedByName(entity.getSignedByName());
         dto.setAudit(AuditDTO.fromEntity(entity.getAudit()));
+
         if(entity.getShipmentReport() != null) {
             dto.setShipment(ShipmentReportResponse.fromEntity(entity.getShipmentReport()));
         }

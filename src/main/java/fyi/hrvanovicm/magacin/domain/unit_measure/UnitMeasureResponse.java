@@ -11,7 +11,7 @@ public class UnitMeasureResponse {
     Boolean isInteger;
     AuditDTO audit;
 
-    public static UnitMeasureResponse fromEntity(UnitMeasure entity) {
+    public static UnitMeasureResponse fromEntity(UnitMeasureEntity entity) {
         var dto = new UnitMeasureResponse();
 
         dto.setId(entity.getId());
@@ -23,8 +23,8 @@ public class UnitMeasureResponse {
         return dto;
     }
 
-    public UnitMeasure toEntity() {
-        var entity = new UnitMeasure();
+    public UnitMeasureEntity toEntity() {
+        var entity = new UnitMeasureEntity();
 
         entity.setId(getId());
         entity.setName(getName());

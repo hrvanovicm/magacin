@@ -1,13 +1,13 @@
 package fyi.hrvanovicm.magacin.domain.products;
 
-import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasure;
+import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureEntity;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public final class ProductUpdateRequest {
+public class ProductRequest {
     @NotBlank
     @Size(max = ProductValidationRulesUtils.NAME_MAX_CHARACTERS)
     String name;
@@ -34,7 +34,7 @@ public final class ProductUpdateRequest {
     @Positive
     Long jmId;
 
-    public ProductEntity toEntity(Long id, UnitMeasure unitMeasure) {
+    public ProductEntity toEntity(Long id, UnitMeasureEntity unitMeasureEntity) {
         var entity = new ProductEntity();
 
         entity.setId(id);
@@ -44,7 +44,23 @@ public final class ProductUpdateRequest {
         entity.setDescriptionHtml(descriptionHtml);
         entity.setInStockAmount(inStockAmount);
         entity.setInStockWarningAmount(inStockWarningAmount);
-        entity.setUnitMeasure(unitMeasure);
+        entity.setUnitMeasure(unitMeasureEntity);
+
+
+        return entity;
+    }
+
+    public ProductEntity toEntity(UnitMeasureEntity unitMeasureEntity) {
+        var entity = new ProductEntity();
+
+        entity.setCategory(category);
+        entity.setName(name);
+        entity.setCode(code);
+        entity.setDescriptionHtml(descriptionHtml);
+        entity.setInStockAmount(inStockAmount);
+        entity.setInStockWarningAmount(inStockWarningAmount);
+        entity.setUnitMeasure(unitMeasureEntity);
+
 
         return entity;
     }

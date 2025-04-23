@@ -12,9 +12,9 @@
                   xmlns:fx="http://javafx.com/fxml/1"
                   fx:controller="fyi.hrvanovicm.magacin.application.javafx.controllers.ScaffoldContoller">
     <content>
-        <VBox prefHeight="581.0" prefWidth="807.0">
+        <VBox>
             <children>
-                <BorderPane fx:id="main" minHeight="200.0" minWidth="500.0" prefHeight="200.0" prefWidth="500.0" VBox.vgrow="ALWAYS">
+                <BorderPane fx:id="main" VBox.vgrow="ALWAYS">
                     <top>
                         <MenuBar BorderPane.alignment="CENTER">
                             <Menu mnemonicParsing="false" text="Resursi">
@@ -28,6 +28,11 @@
                                 <items>
                                     <MenuItem fx:id="menuReceiptReportBtn" mnemonicParsing="false" text="Primke" />
                                     <MenuItem fx:id="menuShipmentReportBtn" mnemonicParsing="false" text="Otpremnice" />
+                                </items>
+                            </Menu>
+                            <Menu mnemonicParsing="false" text="Resursi">
+                                <items>
+                                    <MenuItem fx:id="menuUnitMeasureBtn" mnemonicParsing="false" text="Mjerne jedinice" />
                                 </items>
                             </Menu>
                         </MenuBar>
