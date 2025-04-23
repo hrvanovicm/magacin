@@ -16,7 +16,7 @@
 <?import org.controlsfx.control.CheckComboBox?>
 <?import org.controlsfx.control.SearchableComboBox?>
 
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fyi.hrvanovicm.magacin.application.javafx.controllers.ReportIndexController">
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fyi.hrvanovicm.magacin.presentation.javafx.controllers.ReportIndexController">
     <children>
         <BorderPane prefHeight="800.0" prefWidth="1280.0" VBox.vgrow="ALWAYS">
             <center>

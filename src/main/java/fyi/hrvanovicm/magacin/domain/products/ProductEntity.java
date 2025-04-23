@@ -1,9 +1,7 @@
 package fyi.hrvanovicm.magacin.domain.products;
 
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionEntity;
-import fyi.hrvanovicm.magacin.domain.products.tag.ProductTagEntity;
-import fyi.hrvanovicm.magacin.domain.common.embedded.Audit;
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductEntity;
+import fyi.hrvanovicm.magacin.shared.embeddable.Audit;
+import fyi.hrvanovicm.magacin.domain.report.ReportProductEntity;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureEntity;
 import jakarta.persistence.*;
 import lombok.Data;

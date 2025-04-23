@@ -2,20 +2,17 @@ package fyi.hrvanovicm.magacin.domain.products;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionUpdateRequest;
+import fyi.hrvanovicm.magacin.application.product.dto.ProductDetailsDTO;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureService;
-import jakarta.validation.Valid;
 
 @Component
 public class ProductService {
@@ -33,56 +30,29 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductDTO> getAll() {
+    public List<ProductEntity> getAll() {
         return this.getAll(null);
     }
 
     @Transactional(readOnly = true)
-    public List<ProductDTO> getAll(Specification<ProductEntity> specs) {
-        return repository
-            .findAll(specs)
-            .stream()
-            .map(ProductDTO::fromEntity)
-            .collect(Collectors.toList());
+    public List<ProductEntity> getAll(Specification<ProductEntity> specs) {
+        return repository.findAll(specs);
     }
 
     @Transactional(readOnly = true)
-    public ProductDetailsDTO getById(long productId) {
-        return repository
-                .findById(productId)
-                .map(ProductDetailsDTO::fromEntity)
-                .orElse(null);
+    public Optional<ProductEntity> getById(long productId) {
+        return repository.findById(productId);
+    }
+
+    public boolean exists(long productId) {
+        return repository.existsById(productId);
     }
 
     @Transactional
-    public ProductDetailsDTO create(@Valid ProductRequest request) {
-        var unitMeasure = unitMeasureService
-            .getById(request.getJmId())
-            .orElseThrow()
-            .toEntity();
-
-        var product = request.toEntity(unitMeasure);
-
+    public void save(ProductEntity product) {
         repository.save(product);
-
-        return ProductDetailsDTO.fromEntity(product);
     }
 
-    @Transactional
-    public ProductDetailsDTO update(
-        @NotNull Long productId,
-        @Valid ProductRequest request
-    ) {
-        var unitMeasure = unitMeasureService
-            .getById(request.getJmId())
-            .orElseThrow()
-            .toEntity();
-        var product = request.toEntity(productId, unitMeasure);
-
-        repository.save(product);
-
-        return ProductDetailsDTO.fromEntity(product);
-    }
 
     @Transactional
     public ProductDetailsDTO increaseStock(
@@ -109,16 +79,8 @@ public class ProductService {
     }
 
     @Transactional
-    public void updateReceptions(
-            @NotNull Long productId,
-            List<ProductReceptionUpdateRequest> receptionRequests
-    ) {
+    public void saveReceptions(long productId, List<ProductReceptionEntity> receptions) {
         var product = repository.findById(productId).orElseThrow();
-
-        var receptions = receptionRequests.stream().map(request -> {
-           var rawMaterialProduct = repository.findById(request.getRawMaterialId()).orElseThrow();
-           return request.toEntity(product, rawMaterialProduct);
-        }).collect(Collectors.toList());
 
         product.getReceptions().clear();
         product.getReceptions().addAll(receptions);
@@ -139,8 +101,7 @@ public class ProductService {
     }
 
     @Transactional
-    public void delete(@NotNull Long id) {
-        var product = repository.findById(id).orElseThrow();
-        repository.delete(product);
+    public void delete(long productId) {
+        repository.deleteById(productId);
     }
 }

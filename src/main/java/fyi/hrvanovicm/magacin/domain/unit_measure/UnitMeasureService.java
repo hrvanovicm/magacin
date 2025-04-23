@@ -1,6 +1,5 @@
 package fyi.hrvanovicm.magacin.domain.unit_measure;
 
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,29 +16,25 @@ public class UnitMeasureService {
         this.unitMeasureRepository = unitMeasureRepository;
     }
 
-    public List<UnitMeasureDTO> getAll() {
-        return this.unitMeasureRepository.findAll().stream().map(UnitMeasureDTO::fromEntity).toList();
+    public List<UnitMeasureEntity> findAll() {
+        return this.unitMeasureRepository.findAll();
     }
 
-    public Optional<UnitMeasureDTO> getById(Long id) {
-        return this.unitMeasureRepository.findById(id).map(UnitMeasureDTO::fromEntity);
+    public Optional<UnitMeasureEntity> findById(long id) {
+        return this.unitMeasureRepository.findById(id);
+    }
+
+    public boolean exists(long id) {
+        return unitMeasureRepository.existsById(id);
     }
 
     @Transactional
-    public void save(@Valid UnitMeasureRequest request) {
-        var unitMeasure = Optional.ofNullable(request.getId()).flatMap(unitMeasureRepository::findById).orElse(new UnitMeasureEntity());
-
-        unitMeasure.setName(request.getName());
-        unitMeasure.setShortName(request.getShortName());
-        unitMeasure.setIsInteger(request.getIsInteger());
-
+    public void save(UnitMeasureEntity unitMeasure) {
         this.unitMeasureRepository.save(unitMeasure);
     }
 
     @Transactional
-    public void delete(Long id) {
-        var unitMeasure = Optional.ofNullable(id).flatMap(unitMeasureRepository::findById).orElseThrow();
-
-        this.unitMeasureRepository.deleteById(unitMeasure.getId());
+    public void delete(long id) {
+        this.unitMeasureRepository.deleteById(id);
     }
 }

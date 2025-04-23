@@ -1,6 +1,6 @@
 package fyi.hrvanovicm.magacin.domain.unit_measure;
 
-import fyi.hrvanovicm.magacin.domain.common.embedded.Audit;
+import fyi.hrvanovicm.magacin.shared.embeddable.Audit;
 import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
 import jakarta.persistence.*;
 import lombok.Data;

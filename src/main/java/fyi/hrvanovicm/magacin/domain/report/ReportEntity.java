@@ -1,9 +1,6 @@
 package fyi.hrvanovicm.magacin.domain.report;
 
-import fyi.hrvanovicm.magacin.domain.common.embedded.Audit;
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductEntity;
-import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportEntity;
-import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportEntity;
+import fyi.hrvanovicm.magacin.shared.embeddable.Audit;
 import lombok.*;
 
 import jakarta.persistence.*;

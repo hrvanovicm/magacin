@@ -33,21 +33,15 @@ public class ProductSpecification {
         };
     }
 
-    public static Specification<ProductEntity> hasLowInStockAmount() {
+    public static Specification<ProductEntity> hasTags(List<String> tagNames) {
         return (root, query, builder) -> {
-            return builder.lessThanOrEqualTo(root.get("inStockAmount"), root.get("inStockWarningAmount"));
+            return root.join("tags").get("name").in(tagNames);
         };
     }
 
-    public static Specification<ProductEntity> inStockAmountBetween(Float fromAmount, Float toAmount) {
+    public static Specification<ProductEntity> hasLowInStockAmount() {
         return (root, query, builder) -> {
-            if (fromAmount != null && toAmount != null) {
-                return builder.between(root.get("inStockAmount"), fromAmount, toAmount);
-            } else if (fromAmount != null) {
-                return builder.greaterThanOrEqualTo(root.get("inStockAmount"), fromAmount);
-            } else {
-                return builder.lessThanOrEqualTo(root.get("inStockAmount"), toAmount);
-            }
+            return builder.lessThanOrEqualTo(root.get("inStockAmount"), root.get("inStockWarningAmount"));
         };
     }
 

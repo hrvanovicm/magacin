@@ -1,6 +1,6 @@
 package fyi.hrvanovicm.magacin;
 
-import fyi.hrvanovicm.magacin.infrastructure.javafx.JavaFxApplication;
+import fyi.hrvanovicm.magacin.presentation.javafx.app.JavaFxApplication;
 import javafx.application.Application;
 import net.rgielen.fxweaver.core.FxWeaver;
 import net.rgielen.fxweaver.spring.SpringFxWeaver;

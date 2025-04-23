@@ -17,7 +17,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.web.HTMLEditor?>
 
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fyi.hrvanovicm.magacin.application.javafx.controllers.ProductEditController">
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fyi.hrvanovicm.magacin.presentation.javafx.controllers.ProductEditController">
     <children>
         <BorderPane prefHeight="800.0" prefWidth="1280.0" VBox.vgrow="ALWAYS">
             <left>

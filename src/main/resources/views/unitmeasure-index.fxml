@@ -10,7 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fyi.hrvanovicm.magacin.application.javafx.controllers.UnitMeasureIndexController">
+<VBox alignment="CENTER" spacing="10.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fyi.hrvanovicm.magacin.presentation.javafx.controllers.UnitMeasureIndexController">
     <children>
         <BorderPane VBox.vgrow="ALWAYS">
             <center>

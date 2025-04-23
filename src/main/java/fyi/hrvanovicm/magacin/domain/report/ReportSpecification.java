@@ -25,21 +25,21 @@ public class ReportSpecification {
         };
     }
 
-    public static Specification<ReportEntity> isShipment() {
+    public static Specification<ReportEntity> betweenDatesFrom(LocalDate from) {
         return (root, query, builder) -> {
-            return builder.equal(root.get("type"), ReportType.RECEIPT);
+            if (from != null) {
+                return builder.greaterThanOrEqualTo(root.get("date"), from.toString());
+            }
+            return builder.conjunction(); // Return a no-op predicate when 'from' is null
         };
     }
 
-    public static Specification<ReportEntity> betweenDates(LocalDate from, LocalDate to) {
+    public static Specification<ReportEntity> betweenDatesTo(LocalDate to) {
         return (root, query, builder) -> {
-            if (from != null && to != null) {
-                return builder.between(root.get("date"), from.toString(), to.toString());
-            } else if (from != null) {
-                return builder.greaterThanOrEqualTo(root.get("date"), from.toString());
-            } else {
+            if (to != null) {
                 return builder.lessThanOrEqualTo(root.get("date"), to.toString());
             }
+            return builder.conjunction(); // Return a no-op predicate when 'to' is null
         };
     }
 
