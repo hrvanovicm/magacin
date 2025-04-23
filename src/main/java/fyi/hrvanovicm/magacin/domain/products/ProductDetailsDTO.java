@@ -1,9 +1,9 @@
 package fyi.hrvanovicm.magacin.domain.products;
 
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
+import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionDTO;
 import fyi.hrvanovicm.magacin.domain.products.reports.ProductReportDTO;
 import fyi.hrvanovicm.magacin.domain.products.tag.ProductTagEntity;
-import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
+import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,7 +25,7 @@ public class ProductDetailsDTO extends ProductDTO {
                 productEntity.getInStockAmount() != null && productEntity.getInStockAmount() <= productEntity.getInStockAmount()
         );
         dto.setInStockAmount(productEntity.getInStockAmount());
-        dto.setUnitMeasure(UnitMeasureResponse.fromEntity(productEntity.getUnitMeasure()));
+        dto.setUnitMeasure(UnitMeasureDTO.fromEntity(productEntity.getUnitMeasure()));
         dto.setLowInStockAmount(
                 productEntity.getInStockAmount() != null && productEntity.getInStockAmount() <= productEntity.getInStockAmount()
         );
@@ -33,7 +33,7 @@ public class ProductDetailsDTO extends ProductDTO {
                 .map(ProductReportDTO::fromEntity)
                 .collect(Collectors.toList()));
         dto.setReceptions(productEntity.getReceptions().stream()
-                .map(ProductReceptionBasicResponse::fromEntity)
+                .map(ProductReceptionDTO::fromEntity)
                 .collect(Collectors.toList()));
         dto.setTags(productEntity.getTags().stream()
                 .map(ProductTagEntity::getName)

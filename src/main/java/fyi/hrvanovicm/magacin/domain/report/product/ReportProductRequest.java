@@ -1,7 +1,5 @@
 package fyi.hrvanovicm.magacin.domain.report.product;
 
-import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionEntity;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -25,5 +23,5 @@ public class ReportProductRequest {
     @PositiveOrZero
     Float amount;
 
-    List<ReportProductReceptionRequest> receptions = new ArrayList<>();
+    List<ReportProductReceptionDTO> receptions = new ArrayList<>();
 }

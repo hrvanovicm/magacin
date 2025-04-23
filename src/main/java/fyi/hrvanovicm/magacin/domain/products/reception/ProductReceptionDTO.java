@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ProductReceptionBasicResponse {
+public class ProductReceptionDTO {
     private Long id;
 
 
@@ -15,8 +15,8 @@ public class ProductReceptionBasicResponse {
     private Float amount;
 
     @SuppressWarnings("DuplicatedCode")
-    public static ProductReceptionBasicResponse fromEntity(ProductReceptionEntity receptionEntity) {
-        ProductReceptionBasicResponse dto = new ProductReceptionBasicResponse();
+    public static ProductReceptionDTO fromEntity(ProductReceptionEntity receptionEntity) {
+        ProductReceptionDTO dto = new ProductReceptionDTO();
 
         dto.setId(receptionEntity.getId());
        // dto.setProduct(ProductDTO.fromEntity(receptionEntity.getProduct()));
@@ -26,8 +26,8 @@ public class ProductReceptionBasicResponse {
         return dto;
     }
 
-    public static ProductReceptionBasicResponse fromEntity(ReportProductUsedReceptionsEntity receptionEntity) {
-        ProductReceptionBasicResponse dto = new ProductReceptionBasicResponse();
+    public static ProductReceptionDTO fromEntity(ReportProductUsedReceptionsEntity receptionEntity) {
+        ProductReceptionDTO dto = new ProductReceptionDTO();
 
         dto.setId(receptionEntity.getId());
         // dto.setProduct(ProductDTO.fromEntity(receptionEntity.getProduct()));

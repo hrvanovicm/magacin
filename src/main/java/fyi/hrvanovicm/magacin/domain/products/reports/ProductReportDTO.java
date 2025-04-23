@@ -1,7 +1,6 @@
 package fyi.hrvanovicm.magacin.domain.products.reports;
 
-import fyi.hrvanovicm.magacin.domain.products.ProductDTO;
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
+import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionDTO;
 import fyi.hrvanovicm.magacin.domain.report.Report;
 import fyi.hrvanovicm.magacin.domain.report.product.ReportProductEntity;
 import lombok.Data;
@@ -15,7 +14,7 @@ import java.util.stream.Collectors;
 public class ProductReportDTO {
     private Long id;
     private Report report;
-    private List<ProductReceptionBasicResponse> receptions;
+    private List<ProductReceptionDTO> receptions;
     private Float amount;
 
     public static ProductReportDTO fromEntity(ReportProductEntity entity) {
@@ -23,7 +22,7 @@ public class ProductReportDTO {
 
         dto.setId(entity.getId());
         dto.setReport(Report.fromEntity(entity.getReport()));
-        dto.setReceptions(entity.getReceptions().stream().map(ProductReceptionBasicResponse::fromEntity).collect(Collectors.toList()));
+        dto.setReceptions(entity.getReceptions().stream().map(ProductReceptionDTO::fromEntity).collect(Collectors.toList()));
         dto.setAmount(entity.getAmount());
 
         return dto;

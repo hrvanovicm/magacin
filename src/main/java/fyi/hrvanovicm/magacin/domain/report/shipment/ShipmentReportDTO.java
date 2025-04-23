@@ -5,12 +5,12 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ShipmentReportResponse {
+public class ShipmentReportDTO {
     private Long id;
     private String receiptCompanyName;
 
-    public static ShipmentReportResponse fromEntity(ShipmentReportEntity entity) {
-        var dto = new ShipmentReportResponse();
+    public static ShipmentReportDTO fromEntity(ShipmentReportEntity entity) {
+        var dto = new ShipmentReportDTO();
 
         dto.setId(entity.getId());
         dto.setReceiptCompanyName(entity.getReceiptCompanyName());

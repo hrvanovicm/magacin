@@ -6,10 +6,10 @@ import fyi.hrvanovicm.magacin.domain.products.ProductDTO;
 import fyi.hrvanovicm.magacin.domain.products.ProductCategory;
 import fyi.hrvanovicm.magacin.domain.products.ProductService;
 import fyi.hrvanovicm.magacin.domain.products.ProductSpecification;
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
+import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionDTO;
 import fyi.hrvanovicm.magacin.domain.report.ReportDetails;
 import fyi.hrvanovicm.magacin.domain.report.ReportExportService;
-import fyi.hrvanovicm.magacin.domain.report.product.ReportProductReceptionRequest;
+import fyi.hrvanovicm.magacin.domain.report.product.ReportProductReceptionDTO;
 import fyi.hrvanovicm.magacin.domain.report.product.ReportProductRequest;
 import fyi.hrvanovicm.magacin.domain.report.product.ReportProductDTO;
 import fyi.hrvanovicm.magacin.domain.report.ReportService;
@@ -103,15 +103,15 @@ public class ReportEditController {
 
     // FXML Raw material for product table.
     @FXML
-    private TableView<ProductReceptionBasicResponse> rawMaterialsTable;
+    private TableView<ProductReceptionDTO> rawMaterialsTable;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, String> rbRawMaterialTableColumn;
+    private TableColumn<ProductReceptionDTO, String> rbRawMaterialTableColumn;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, ProductDTO> rawMaterialTableColumn;
+    private TableColumn<ProductReceptionDTO, ProductDTO> rawMaterialTableColumn;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, String> rawMaterialAmountTableColumn;
+    private TableColumn<ProductReceptionDTO, String> rawMaterialAmountTableColumn;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, String> rawMaterialUnitMeasureTableColumn;
+    private TableColumn<ProductReceptionDTO, String> rawMaterialUnitMeasureTableColumn;
 
     // Spring injections.
     private final ProductService productService;
@@ -232,7 +232,7 @@ public class ReportEditController {
                                     b.getReceptions()
                                             .stream()
                                             .map(val -> {
-                                                var rec =  new ProductReceptionBasicResponse();
+                                                var rec =  new ProductReceptionDTO();
                                                 rec.setRawMaterialProduct(val.getRawMaterialProduct());
                                                 rec.setAmount(val.getAmount() * a.getAmount());
                                                 return rec;
@@ -266,7 +266,7 @@ public class ReportEditController {
                                                 .getReceptions()
                                                 .stream()
                                                 .filter(reception -> Objects.equals(reception.getRawMaterialProduct().getId(), rawMaterial.getRawMaterialProduct().getId()))
-                                                .map(ProductReceptionBasicResponse::getAmount)
+                                                .map(ProductReceptionDTO::getAmount)
                                                 .findFirst()
                                                 .get();
 
@@ -289,31 +289,31 @@ public class ReportEditController {
 
         rbRawMaterialTableColumn.setCellValueFactory(CellValueFactory.sequenceNumber(rawMaterialsTable));
         rawMaterialTableColumn.setCellValueFactory(CellValueFactory.product(
-                ProductReceptionBasicResponse::getRawMaterialProduct
+                ProductReceptionDTO::getRawMaterialProduct
         ));
         rawMaterialTableColumn.setEditable(true);
         rawMaterialTableColumn.setCellFactory(
                 CellFactory.productSearchableCombo(
                         () -> products,
-                        ProductReceptionBasicResponse::setRawMaterialProduct
+                        ProductReceptionDTO::setRawMaterialProduct
                 )
         );
 
 
         rawMaterialAmountTableColumn.setCellValueFactory(CellValueFactory.amount(
-                ProductReceptionBasicResponse::getRawMaterialProduct,
-                ProductReceptionBasicResponse::getAmount,
+                ProductReceptionDTO::getRawMaterialProduct,
+                ProductReceptionDTO::getAmount,
                 false
         ));
         rawMaterialUnitMeasureTableColumn.setCellValueFactory(CellValueFactory.unitMeasure(
-                ProductReceptionBasicResponse::getRawMaterialProduct
+                ProductReceptionDTO::getRawMaterialProduct
         ));
 
         rawMaterialAmountTableColumn.setEditable(true);
         rawMaterialAmountTableColumn.setCellFactory(TextFieldTableCell.forTableColumn());
         rawMaterialAmountTableColumn.setOnEditCommit(
                 CellFactory.amountTextField(
-                    ProductReceptionBasicResponse::setAmount
+                    ProductReceptionDTO::setAmount
                 ));
 
         this.saveBtn.setOnAction(event -> save());
@@ -426,7 +426,7 @@ public class ReportEditController {
                                 req.setId(item.getId());
                                 req.setReceptions(item.getReceptions().stream().map(
                                         rec -> {
-                                            var recReq = new ReportProductReceptionRequest();
+                                            var recReq = new ReportProductReceptionDTO();
                                             recReq.setId(rec.getId());
                                             recReq.setRawMaterialId(rec.getRawMaterialProduct().getId());
                                             recReq.setAmount(rec.getAmount());
@@ -464,7 +464,7 @@ public class ReportEditController {
                                 req.setId(item.getId());
                                 req.setReceptions(item.getReceptions().stream().map(
                                         rec -> {
-                                            var recReq = new ReportProductReceptionRequest();
+                                            var recReq = new ReportProductReceptionDTO();
                                             recReq.setId(rec.getId());
                                             recReq.setRawMaterialId(rec.getRawMaterialProduct().getId());
                                             recReq.setAmount(rec.getAmount());

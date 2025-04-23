@@ -1,8 +1,8 @@
 package fyi.hrvanovicm.magacin.domain.report;
 
 import fyi.hrvanovicm.magacin.domain.common.embedded.AuditDTO;
-import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportResponse;
-import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportResponse;
+import fyi.hrvanovicm.magacin.domain.report.receipt.ReceiptReportDTO;
+import fyi.hrvanovicm.magacin.domain.report.shipment.ShipmentReportDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,8 +18,8 @@ public class Report {
     String placeOfPublish;
     String signedByName;
     AuditDTO audit;
-    ShipmentReportResponse shipment;
-    ReceiptReportResponse receipt;
+    ShipmentReportDTO shipment;
+    ReceiptReportDTO receipt;
 
     @SuppressWarnings("DuplicatedCode")
     public static Report fromEntity(ReportEntity entity) {
@@ -34,10 +34,10 @@ public class Report {
         dto.setAudit(AuditDTO.fromEntity(entity.getAudit()));
 
         if(entity.getShipmentReport() != null) {
-            dto.setShipment(ShipmentReportResponse.fromEntity(entity.getShipmentReport()));
+            dto.setShipment(ShipmentReportDTO.fromEntity(entity.getShipmentReport()));
         }
         if(entity.getReceiptReport() != null) {
-            dto.setReceipt(ReceiptReportResponse.fromEntity(entity.getReceiptReport()));
+            dto.setReceipt(ReceiptReportDTO.fromEntity(entity.getReceiptReport()));
         }
 
         return dto;

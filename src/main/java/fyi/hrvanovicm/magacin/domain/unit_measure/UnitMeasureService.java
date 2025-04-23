@@ -17,12 +17,12 @@ public class UnitMeasureService {
         this.unitMeasureRepository = unitMeasureRepository;
     }
 
-    public List<UnitMeasureResponse> getAll() {
-        return this.unitMeasureRepository.findAll().stream().map(UnitMeasureResponse::fromEntity).toList();
+    public List<UnitMeasureDTO> getAll() {
+        return this.unitMeasureRepository.findAll().stream().map(UnitMeasureDTO::fromEntity).toList();
     }
 
-    public Optional<UnitMeasureResponse> getById(Long id) {
-        return this.unitMeasureRepository.findById(id).map(UnitMeasureResponse::fromEntity);
+    public Optional<UnitMeasureDTO> getById(Long id) {
+        return this.unitMeasureRepository.findById(id).map(UnitMeasureDTO::fromEntity);
     }
 
     @Transactional

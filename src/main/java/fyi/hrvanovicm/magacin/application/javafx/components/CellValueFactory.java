@@ -2,7 +2,7 @@ package fyi.hrvanovicm.magacin.application.javafx.components;
 
 import fyi.hrvanovicm.magacin.domain.products.ProductDTO;
 import fyi.hrvanovicm.magacin.domain.report.Report;
-import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
+import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureDTO;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -24,15 +24,15 @@ public class CellValueFactory {
         );
     }
 
-    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureResponse, String>, ObservableValue<String>> unitMeasureName() {
+    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureDTO, String>, ObservableValue<String>> unitMeasureName() {
         return cellData -> new SimpleStringProperty(cellData.getValue().getName());
     }
 
-    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureResponse, String>, ObservableValue<String>> unitMeasureShortName() {
+    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureDTO, String>, ObservableValue<String>> unitMeasureShortName() {
         return cellData -> new SimpleStringProperty(cellData.getValue().getShortName());
     }
 
-    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureResponse, Boolean>, ObservableValue<Boolean>> unitMeasureIsInteger() {
+    public static <T> Callback<TableColumn.CellDataFeatures<UnitMeasureDTO, Boolean>, ObservableValue<Boolean>> unitMeasureIsInteger() {
         return cellData -> new SimpleBooleanProperty(cellData.getValue().getIsInteger());
     }
 

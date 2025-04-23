@@ -4,15 +4,15 @@ import fyi.hrvanovicm.magacin.domain.common.embedded.AuditDTO;
 import lombok.Data;
 
 @Data
-public class UnitMeasureResponse {
+public class UnitMeasureDTO {
     Long id;
     String name;
     String shortName;
     Boolean isInteger;
     AuditDTO audit;
 
-    public static UnitMeasureResponse fromEntity(UnitMeasureEntity entity) {
-        var dto = new UnitMeasureResponse();
+    public static UnitMeasureDTO fromEntity(UnitMeasureEntity entity) {
+        var dto = new UnitMeasureDTO();
 
         dto.setId(entity.getId());
         dto.setName(entity.getName());

@@ -5,9 +5,9 @@ import fyi.hrvanovicm.magacin.application.javafx.components.CellValueFactory;
 import fyi.hrvanovicm.magacin.domain.products.reports.ProductReportDTO;
 import fyi.hrvanovicm.magacin.infrastructure.DialogService;
 import fyi.hrvanovicm.magacin.domain.products.*;
-import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionBasicResponse;
+import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionDTO;
 import fyi.hrvanovicm.magacin.domain.products.reception.ProductReceptionUpdateRequest;
-import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureResponse;
+import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureDTO;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureService;
 import fyi.hrvanovicm.magacin.infrastructure.javafx.Router;
 import fyi.hrvanovicm.magacin.infrastructure.notification.NotificationService;
@@ -39,7 +39,7 @@ public class ProductEditController implements AutoLoadController {
     @FXML
     private TextField inStockAmountInput;
     @FXML
-    private ComboBox<UnitMeasureResponse> unitMeasureCombo;
+    private ComboBox<UnitMeasureDTO> unitMeasureCombo;
     @FXML
     private TextField inStockWarningAmountInput;
     @FXML
@@ -49,15 +49,15 @@ public class ProductEditController implements AutoLoadController {
     @FXML
     private Button deleteProductBtn;
     @FXML
-    private TableView<ProductReceptionBasicResponse> receptionTable;
+    private TableView<ProductReceptionDTO> receptionTable;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, String> rbReceptionTableColumn;
+    private TableColumn<ProductReceptionDTO, String> rbReceptionTableColumn;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, ProductDTO> rawMaterialProductReceptionTableColumn;
+    private TableColumn<ProductReceptionDTO, ProductDTO> rawMaterialProductReceptionTableColumn;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, String> productAmountTableColumn;
+    private TableColumn<ProductReceptionDTO, String> productAmountTableColumn;
     @FXML
-    private TableColumn<ProductReceptionBasicResponse, String> productUnitMeasureTableColumn;
+    private TableColumn<ProductReceptionDTO, String> productUnitMeasureTableColumn;
     @FXML
     private TableView<ProductReportDTO> reportTable;
     @FXML
@@ -112,7 +112,7 @@ public class ProductEditController implements AutoLoadController {
         var addNewRowMenuItem = new MenuItem("Dodaj sirovinu");
         receptionTableContextMenu.getItems().add(addNewRowMenuItem);
         addNewRowMenuItem.setOnAction(event -> {
-            var product = new ProductReceptionBasicResponse();
+            var product = new ProductReceptionDTO();
 
             product.setAmount(Float.valueOf("0.0"));
            // product.setProduct(this.product.toBasicResponse());
@@ -123,7 +123,7 @@ public class ProductEditController implements AutoLoadController {
         var removeRowMenuItem = new MenuItem("Ukloni sirovinu");
         receptionTableContextMenu.getItems().add(removeRowMenuItem);
         removeRowMenuItem.setOnAction(event -> {
-            ProductReceptionBasicResponse selectedItem = receptionTable.getSelectionModel().getSelectedItem();
+            ProductReceptionDTO selectedItem = receptionTable.getSelectionModel().getSelectedItem();
 
             if (selectedItem != null) {
                 receptionTable.getItems().remove(selectedItem);
@@ -147,16 +147,16 @@ public class ProductEditController implements AutoLoadController {
         // Reception table cell value factory.
         rbReceptionTableColumn.setCellValueFactory(CellValueFactory.sequenceNumber(receptionTable));
         rawMaterialProductReceptionTableColumn.setCellValueFactory(
-                CellValueFactory.product(ProductReceptionBasicResponse::getRawMaterialProduct)
+                CellValueFactory.product(ProductReceptionDTO::getRawMaterialProduct)
         );
         productAmountTableColumn.setCellValueFactory(CellValueFactory.amount(
-                ProductReceptionBasicResponse::getRawMaterialProduct,
-                ProductReceptionBasicResponse::getAmount,
+                ProductReceptionDTO::getRawMaterialProduct,
+                ProductReceptionDTO::getAmount,
                 false
         ));
         productUnitMeasureTableColumn.setCellValueFactory(
                 CellValueFactory.unitMeasure(
-                        ProductReceptionBasicResponse::getRawMaterialProduct
+                        ProductReceptionDTO::getRawMaterialProduct
                 )
         );
 
@@ -165,14 +165,14 @@ public class ProductEditController implements AutoLoadController {
         rawMaterialProductReceptionTableColumn.setCellFactory(
                 CellFactory.productSearchableCombo(
                         () -> rawMaterialProducts,
-                        ProductReceptionBasicResponse::setRawMaterialProduct
+                        ProductReceptionDTO::setRawMaterialProduct
                 )
         );
 
         // Reception table cell config.
         rawMaterialProductReceptionTableColumn.setEditable(true);
         productAmountTableColumn.setEditable(true);
-        productAmountTableColumn.setOnEditCommit(CellFactory.amountTextField(ProductReceptionBasicResponse::setAmount));
+        productAmountTableColumn.setOnEditCommit(CellFactory.amountTextField(ProductReceptionDTO::setAmount));
 
         // Report table config.
         this.reportTable.setOnMouseClicked(event -> {
@@ -224,7 +224,7 @@ public class ProductEditController implements AutoLoadController {
         categoryCombo.getItems().removeAll();
         categoryCombo.getItems().addAll(categories);
 
-        List<UnitMeasureResponse> unitMeasures = this.unitMeasureService.getAll();
+        List<UnitMeasureDTO> unitMeasures = this.unitMeasureService.getAll();
         unitMeasureCombo.getItems().removeAll();
         unitMeasureCombo.getItems().addAll(unitMeasures);
 

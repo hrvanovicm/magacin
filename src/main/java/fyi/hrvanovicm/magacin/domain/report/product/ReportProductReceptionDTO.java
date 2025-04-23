@@ -6,11 +6,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
-public class ReportProductReceptionRequest {
+public class ReportProductReceptionDTO {
     @Positive
     Long id;
 
