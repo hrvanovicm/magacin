@@ -1,13 +1,7 @@
 package fyi.hrvanovicm.magacin.domain.report;
 
-import fyi.hrvanovicm.magacin.application.report.dto.ReportDetailsDTO;
-import fyi.hrvanovicm.magacin.application.report.requests.ReportEditRequest;
-import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
-import fyi.hrvanovicm.magacin.domain.products.ProductRepository;
 import fyi.hrvanovicm.magacin.domain.products.ProductService;
-import fyi.hrvanovicm.magacin.application.report.requests.ReportProductRequest;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
+import fyi.hrvanovicm.magacin.infrastructure.persistance.ReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
@@ -16,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Component
@@ -69,14 +62,19 @@ public class ReportService {
         this.resetStockAmounts(report);
 
         report.getProducts().clear();
-        report.getProducts().addAll(products);
+        report.getProducts().addAll(products.stream().peek(product -> {
+            if(!report.getType().equals(ReportType.RECEIPT) || !report.getReceiptReport().getIsSupplierProduction()) {
+                product.getUsedReceptions().clear();
+            }
+        }).collect(Collectors.toList()));
+        reportRepository.save(report);
 
         this.updateStockAmounts(report);
     }
 
     private void resetStockAmounts(ReportEntity report) {
         report.getProducts().forEach(product -> {
-            product.getReceptions().forEach(reception -> {
+            product.getUsedReceptions().forEach(reception -> {
                 this.productService.increaseStock(reception.getRawMaterialProduct().getId(), reception.getAmount());
             });
 
@@ -88,9 +86,14 @@ public class ReportService {
         });
     }
 
+    /**
+     * On every call in stock will be decreased or increased.
+     * Be aware because if you don't call the method 'resetStockAmounts'
+     * you can increase/decrease multiple times instead of one.
+     */
     private void updateStockAmounts(ReportEntity report) {
         report.getProducts().forEach(product -> {
-            product.getReceptions().forEach(reception -> {
+            product.getUsedReceptions().forEach(reception -> {
                 this.productService.decreaseStock(reception.getRawMaterialProduct().getId(), reception.getAmount());
             });
 
@@ -106,7 +109,6 @@ public class ReportService {
         this.reportRepository.save(report);
     }
 
-    @Transactional
     public void delete(Long id) {
         var report = reportRepository.findById(id).orElseThrow();
 

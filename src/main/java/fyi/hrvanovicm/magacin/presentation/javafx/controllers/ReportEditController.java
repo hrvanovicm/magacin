@@ -6,19 +6,21 @@ import fyi.hrvanovicm.magacin.application.report.commands.DeleteReportHandler;
 import fyi.hrvanovicm.magacin.application.report.commands.ReportExportHandler;
 import fyi.hrvanovicm.magacin.application.report.commands.UpdateReportHandler;
 import fyi.hrvanovicm.magacin.application.report.queries.ReportQueryService;
+import fyi.hrvanovicm.magacin.application.report.requests.ReportEditRequest;
+import fyi.hrvanovicm.magacin.infrastructure.notification.NotificationService;
 import fyi.hrvanovicm.magacin.presentation.javafx.factory.CellFactory;
 import fyi.hrvanovicm.magacin.presentation.javafx.factory.CellValueFactory;
 import fyi.hrvanovicm.magacin.application.product.dto.ProductDTO;
 import fyi.hrvanovicm.magacin.application.product.dto.ProductReceptionDTO;
 import fyi.hrvanovicm.magacin.application.report.dto.ReportDetailsDTO;
-import fyi.hrvanovicm.magacin.application.report.dto.ReportProductReceptionDTO;
 import fyi.hrvanovicm.magacin.application.report.requests.ReportProductRequest;
 import fyi.hrvanovicm.magacin.application.report.dto.ReportProductDTO;
 import fyi.hrvanovicm.magacin.domain.report.ReportType;
 import fyi.hrvanovicm.magacin.application.report.requests.ReceiptReportEditRequest;
-import fyi.hrvanovicm.magacin.application.report.requests.ShipmentReportRequest;
+import fyi.hrvanovicm.magacin.application.report.requests.ShipmentReportEditRequest;
 import fyi.hrvanovicm.magacin.presentation.javafx.factory.DialogFactory;
 import fyi.hrvanovicm.magacin.presentation.javafx.app.Router;
+import fyi.hrvanovicm.magacin.shared.exceptions.ValidationFailedException;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -121,6 +123,7 @@ public class ReportEditController {
 
     private final DialogFactory dialogService;
     private final Router router;
+    private final NotificationService notificationService;
 
     private final ReportQueryService reportQueryService;
 
@@ -131,6 +134,7 @@ public class ReportEditController {
             DeleteReportHandler deleteReportHandler,
             DialogFactory dialogService,
             Router router,
+            NotificationService notificationService,
             ReportQueryService reportQueryService,
             ReportExportHandler reportExportHandler
     ) {
@@ -140,6 +144,7 @@ public class ReportEditController {
         this.deleteReportHandler = deleteReportHandler;
         this.dialogService = dialogService;
         this.router = router;
+        this.notificationService = notificationService;
         this.reportQueryService = reportQueryService;
         this.reportExportHandler = reportExportHandler;
     }
@@ -181,6 +186,26 @@ public class ReportEditController {
            if(newValue) {
                this.supplierCompanyNameInput.clear();
                this.supplierCompanyNameInput.setDisable(true);
+
+               var products = productTable.getItems().stream().map(product -> {
+                   if(product.getReceptions().isEmpty()) {
+                       product.setReceptions(
+                               product.getProduct().getReceptions()
+                                       .stream()
+                                       .map(val -> {
+                                           var rec =  new ProductReceptionDTO();
+                                           rec.setRawMaterialProduct(val.getRawMaterialProduct());
+                                           rec.setAmount(val.getAmount() * product.getAmount());
+                                           return rec;
+                                       }).toList()
+                       );
+                   }
+
+                   return product;
+               });
+               productTable.setItems(FXCollections.observableArrayList(products.collect(Collectors.toList())));
+               productTable.refresh();
+
            } else {
                this.supplierCompanyNameInput.clear();
                this.supplierCompanyNameInput.setDisable(false);
@@ -411,89 +436,52 @@ public class ReportEditController {
     }
 
     private void save() {
-        if(reportType == ReportType.RECEIPT) {
-            var request = new ReceiptReportEditRequest();
+        ReportEditRequest request;
+
+        try {
+            if(reportType == ReportType.RECEIPT) {
+                request = new ReceiptReportEditRequest();
+
+                ((ReceiptReportEditRequest) request).setSupplierReportCode(this.supplierReportCodeInput.getText());
+                ((ReceiptReportEditRequest) request).setSupplierCompanyName(this.supplierCompanyNameInput.getText());
+                ((ReceiptReportEditRequest) request).setIsSupplierProduction(this.supplierLocalCheckbox.isSelected());
+            } else if (reportType == ReportType.SHIPMENT) {
+                request = new ShipmentReportEditRequest();
+                ((ShipmentReportEditRequest) request).setReceiptCompanyName(this.receiptCompanyNameInput.getText());
+            } else {
+                throw new RuntimeException("Unsupported report type: " + reportType);
+            }
 
             request.setDate(this.signedOnDatePicker.getValue());
             request.setSignedByName(this.signedByNameInput.getText());
             request.setCode(this.codeInput.getText());
             request.setDescriptionHtml(this.descriptionHtmlEditor.getHtmlText());
             request.setPlaceOfPublish(this.signedOnPlaceInput.getText());
-            request.setSupplierReportCode(this.supplierReportCodeInput.getText());
-            request.setSupplierCompanyName(this.supplierCompanyNameInput.getText());
-            request.setIsSupplierProduction(this.supplierLocalCheckbox.isSelected());
-
             request.setProducts(
                     productTable.getItems()
                             .stream()
                             .filter(item -> item.getProduct() != null)
-                            .map(item -> {
-                                var req = new ReportProductRequest();
-                                req.setId(item.getId());
-                                req.setReceptions(item.getReceptions().stream().map(
-                                        rec -> {
-                                            var recReq = new ReportProductReceptionDTO();
-                                            recReq.setId(rec.getId());
-                                            recReq.setRawMaterialId(rec.getRawMaterialProduct().getId());
-                                            recReq.setAmount(rec.getAmount());
-
-                                            return recReq;
-                                        }
-                                ).collect(Collectors.toList()));
-                                req.setProductId(item.getProduct().getId());
-                                req.setAmount(item.getAmount());
-                                return req;
-                            })
+                            .map(ReportProductRequest::from)
                             .collect(Collectors.toList())
             );
-
-            if(this.report != null) {
-                this.report = this.updateReportHandler.handle(report.getId(), request);
-            } else {
-                this.report = this.createReportHandler.handle(request);
-            }
-
-        } else if (reportType == ReportType.SHIPMENT) {
-            var request = new ShipmentReportRequest();
-
-            request.setDate(this.signedOnDatePicker.getValue());
-            request.setSignedByName(this.signedByNameInput.getText());
-            request.setCode(this.codeInput.getText());
-            request.setDescriptionHtml(this.descriptionHtmlEditor.getHtmlText());
-            request.setPlaceOfPublish(this.signedOnPlaceInput.getText());
-            request.setReceiptCompanyName(this.receiptCompanyNameInput.getText());
-            request.setProducts(
-                    productTable.getItems()
-                            .stream()
-                            .filter(item -> item.getProduct() != null)
-                            .map(item -> {
-                                var req = new ReportProductRequest();
-                                req.setId(item.getId());
-                                req.setReceptions(item.getReceptions().stream().map(
-                                        rec -> {
-                                            var recReq = new ReportProductReceptionDTO();
-                                            recReq.setId(rec.getId());
-                                            recReq.setRawMaterialId(rec.getRawMaterialProduct().getId());
-                                            recReq.setAmount(rec.getAmount());
-
-                                            return recReq;
-                                        }
-                                ).collect(Collectors.toList()));
-                                req.setProductId(item.getProduct().getId());
-                                req.setAmount(item.getAmount());
-                                return req;
-                            })
-                            .collect(Collectors.toList())
-            );
-            if(this.report != null) {
-                this.report = this.updateReportHandler.handle(report.getId(), request);
-            } else {
-                this.report = this.createReportHandler.handle(request);
-            }
+        } catch (Exception e) {
+            dialogService.showErrorDialog("Sva polja nisu validna!");
+            e.printStackTrace();
+            return;
         }
 
-        this.load(this.report.getId(), this.reportType);
-        this.productTable.refresh();
+        try {
+            this.report = this.report != null
+                    ? this.updateReportHandler.handle(report.getId(), request)
+                    : this.createReportHandler.handle(request);
+
+            this.notificationService.notifyUser("Uspješno sačuvan izvještaj!");
+            this.load(this.report.getId(), this.reportType);
+            this.productTable.refresh();
+        } catch (Exception e) {
+            dialogService.showErrorDialog(e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void delete() {

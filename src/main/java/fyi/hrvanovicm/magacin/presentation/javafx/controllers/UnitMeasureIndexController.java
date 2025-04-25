@@ -1,5 +1,6 @@
 package fyi.hrvanovicm.magacin.presentation.javafx.controllers;
 
+import fyi.hrvanovicm.magacin.application.product.dto.ProductReceptionDTO;
 import fyi.hrvanovicm.magacin.application.unit_measure.handlers.CreateUnitMeasureHandler;
 import fyi.hrvanovicm.magacin.application.unit_measure.handlers.DeleteUnitMeasureHandler;
 import fyi.hrvanovicm.magacin.application.unit_measure.handlers.UpdateUnitMeasureHandler;
@@ -9,6 +10,7 @@ import fyi.hrvanovicm.magacin.presentation.javafx.factory.CellValueFactory;
 import fyi.hrvanovicm.magacin.domain.products.*;
 import fyi.hrvanovicm.magacin.application.unit_measure.dto.UnitMeasureDTO;
 import fyi.hrvanovicm.magacin.presentation.javafx.app.Router;
+import fyi.hrvanovicm.magacin.presentation.javafx.factory.DialogFactory;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -22,6 +24,9 @@ import org.controlsfx.control.CheckComboBox;
 import org.controlsfx.control.SearchableComboBox;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @FxmlView("/views/unitmeasure-index.fxml")
@@ -57,6 +62,9 @@ public class UnitMeasureIndexController implements AutoLoadController {
     private Label tableResultStatusInfo;
 
     @FXML
+    private Button saveBtn;
+
+    @FXML
     private Button refreshBtn;
 
     private final UnitMeasureQueryService unitMeasureQueryService;
@@ -66,6 +74,9 @@ public class UnitMeasureIndexController implements AutoLoadController {
     private final DeleteUnitMeasureHandler deleteUnitMeasureHandler;
 
     private final Router router;
+    private final DialogFactory dialogService;
+
+    private List<UnitMeasureDTO> tableRowDeleteBucket = new ArrayList<>();
 
     @Autowired
     public UnitMeasureIndexController(
@@ -73,13 +84,15 @@ public class UnitMeasureIndexController implements AutoLoadController {
           CreateUnitMeasureHandler createUnitMeasureHandler,
           UpdateUnitMeasureHandler updateUnitMeasureHandler,
           DeleteUnitMeasureHandler deleteUnitMeasureHandler,
-          Router router
+          Router router,
+            DialogFactory dialogService
     ) {
         this.unitMeasureQueryService = unitMeasureQueryService;
         this.createUnitMeasureHandler = createUnitMeasureHandler;
         this.updateUnitMeasureHandler = updateUnitMeasureHandler;
         this.deleteUnitMeasureHandler = deleteUnitMeasureHandler;
         this.router = router;
+        this.dialogService = dialogService;
     }
 
     public void load() {
@@ -96,6 +109,33 @@ public class UnitMeasureIndexController implements AutoLoadController {
         // Table configurations.
         tableView.setEditable(true);
 
+        // Table context menu.
+        var contextMenu = new ContextMenu();
+        var addNewRowMenuItem = new MenuItem("Kreiraj");
+        contextMenu.getItems().add(addNewRowMenuItem);
+        addNewRowMenuItem.setOnAction(event -> {
+            var unitMeasureDTO = new UnitMeasureDTO();
+            unitMeasureDTO.setIsInteger(true);
+            tableView.getItems().add(0, unitMeasureDTO);
+        });
+
+        var removeRowMenuItem = new MenuItem("Ukloni");
+        contextMenu.getItems().add(removeRowMenuItem);
+        removeRowMenuItem.setOnAction(event -> {
+            UnitMeasureDTO selectedItem = tableView.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                tableRowDeleteBucket.add(selectedItem);
+                tableView.getItems().remove(selectedItem);
+            }
+        });
+
+        tableView.setContextMenu(contextMenu);
+        tableView.setOnContextMenuRequested(
+                event -> removeRowMenuItem.setDisable(
+                        tableView.getSelectionModel().getSelectedItem() == null
+                )
+        );
+
         // Table value factory.
         rbCol.setCellValueFactory(CellValueFactory.sequenceNumber(tableView));
         nameCol.setCellValueFactory(CellValueFactory.unitMeasureName());
@@ -111,8 +151,7 @@ public class UnitMeasureIndexController implements AutoLoadController {
                 BooleanProperty prop = new SimpleBooleanProperty(col.getTableView().getItems().get(index).getIsInteger());
                 prop.addListener((obs, oldVal, newVal) -> {
                     UnitMeasureDTO rowItem = col.getTableView().getItems().get(index);
-                    rowItem.setIsInteger(newVal); // if not already bound
-                    update(rowItem); // manually call your save
+                    rowItem.setIsInteger(newVal);
                 });
                 return prop;
             });
@@ -121,28 +160,43 @@ public class UnitMeasureIndexController implements AutoLoadController {
 
         nameCol.setOnEditCommit(event -> {
             event.getRowValue().setName(event.getNewValue());
-            this.update(event.getRowValue());
         });
         shortNameCol.setOnEditCommit(event -> {
             event.getRowValue().setShortName(event.getNewValue());
-            this.update(event.getRowValue());
         });
         isIntegerCol.setOnEditStart(event -> {
             event.getRowValue().setIsInteger(event.getNewValue());
-            this.update(event.getRowValue());
         });
 
         // Table action buttons.
         refreshBtn.setOnAction(event -> load());
+        saveBtn.setOnAction(event -> save());
     }
 
-    public void update(UnitMeasureDTO unitMeasureDTO) {
-        var request = new UnitMeasureEditRequest();
+    public void save() {
+        var unitMeasures = tableView.getItems();
 
-        request.setName(unitMeasureDTO.getName());
-        request.setShortName(unitMeasureDTO.getShortName());
-        request.setIsInteger(unitMeasureDTO.getIsInteger());
+        unitMeasures.forEach(unitMeasureDTO -> {
+            var request = UnitMeasureEditRequest.from(unitMeasureDTO);
 
-        this.updateUnitMeasureHandler.handle(unitMeasureDTO.getId(), request);
+            if(unitMeasureDTO.getName() == null || unitMeasureDTO.getShortName() == null) {
+                return;
+            }
+
+            try {
+                if(tableRowDeleteBucket.contains(unitMeasureDTO)) {
+                    deleteUnitMeasureHandler.handle(unitMeasureDTO.getId());
+                } else if(unitMeasureDTO.getId() == null) {
+                    createUnitMeasureHandler.handle(request);
+                } else {
+                    updateUnitMeasureHandler.handle(unitMeasureDTO.getId(), request);
+                }
+            } catch(Exception e) {
+                dialogService.showErrorDialog(e.getMessage());
+                e.printStackTrace();
+            }
+        });
+
+        this.load();
     }
 }

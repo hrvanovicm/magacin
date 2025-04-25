@@ -1,5 +1,6 @@
-package fyi.hrvanovicm.magacin.domain.products;
+package fyi.hrvanovicm.magacin.infrastructure.persistance;
 
+import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;

@@ -23,13 +23,23 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
     @Override
     public void onApplicationEvent(StageReadyEvent event) {
         Stage stage = event.getStage();
+
+        stage.widthProperty().addListener((obs, oldVal, newVal) -> {
+            this.router.setWidth(stage.getWidth());
+        });
+
+        stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+            this.router.setHeight(stage.getHeight());
+        });
+
         stage.setWidth(1300);
         stage.setHeight(700);
         stage.setTitle(applicationTitle);
         stage.centerOnScreen();
-        stage.show();
 
         this.router.setPrimaryStage(stage);
         this.router.navigateTo(ProductIndexController.class);
+
+        stage.show();
     }
 }

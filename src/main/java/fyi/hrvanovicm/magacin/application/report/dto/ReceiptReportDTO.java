@@ -17,6 +17,7 @@ public class ReceiptReportDTO {
 
         dto.setId(entity.getId());
         dto.setSupplierReportCode(entity.getSupplierReportCode());
+        dto.setSupplierCompanyName(entity.getSupplierCompanyName());
         if(entity.getIsSupplierProduction()) {
             dto.setSupplierCompanyName("Proizvodnja");
         }

@@ -22,7 +22,7 @@ public class ReportProductDTO {
 
         dto.setId(entity.getId());
         dto.setProduct(ProductDTO.fromEntity(entity.getProduct()));
-        dto.setReceptions(entity.getReceptions().stream().map(ProductReceptionDTO::fromEntity).collect(Collectors.toList()));
+        dto.setReceptions(entity.getUsedReceptions().stream().map(ProductReceptionDTO::fromEntity).collect(Collectors.toList()));
         dto.setAmount(entity.getAmount());
 
         return dto;

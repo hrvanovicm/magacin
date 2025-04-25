@@ -63,7 +63,7 @@
                   </HBox>
                       <TableView fx:id="tableView" editable="true" prefHeight="519.0" prefWidth="642.0" tableMenuButtonVisible="true" VBox.vgrow="ALWAYS">
                           <columns>
-                              <TableColumn fx:id="rbTableColumn" editable="false" prefWidth="75.0" sortable="false" text="Rb." />
+                              <TableColumn fx:id="rbTableColumn" editable="false" maxWidth="120.0" minWidth="120.0" prefWidth="120.0" sortable="false" text="Rb." />
                               <TableColumn fx:id="typeTableColumn" editable="false" prefWidth="75.0" sortable="true" text="Tip" />
                               <TableColumn fx:id="codeTableColumn" editable="false" prefWidth="75.0" sortable="true" text="Šifra" />
                               <TableColumn fx:id="dateTableColumn" editable="false" prefWidth="75.0" sortable="true" text="Datum" />

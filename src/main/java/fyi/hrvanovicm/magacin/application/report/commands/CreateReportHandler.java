@@ -1,11 +1,9 @@
 package fyi.hrvanovicm.magacin.application.report.commands;
 
+import fyi.hrvanovicm.magacin.application.BaseHandler;
 import fyi.hrvanovicm.magacin.application.report.dto.ReportDetailsDTO;
-import fyi.hrvanovicm.magacin.application.report.requests.ReceiptReportEditRequest;
 import fyi.hrvanovicm.magacin.application.report.requests.ReportEditRequest;
 import fyi.hrvanovicm.magacin.application.report.requests.ReportProductRequest;
-import fyi.hrvanovicm.magacin.application.report.requests.ShipmentReportRequest;
-import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
 import fyi.hrvanovicm.magacin.domain.products.ProductService;
 import fyi.hrvanovicm.magacin.domain.report.ReportEntity;
 import fyi.hrvanovicm.magacin.domain.report.ReportProductEntity;
@@ -20,7 +18,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class CreateReportHandler {
+public class CreateReportHandler extends BaseHandler {
     private final ReportService reportService;
     private final ProductService productService;
 
@@ -57,7 +55,7 @@ public class CreateReportHandler {
             reportProduct.setProduct(product);
             reportProduct.setReport(report);
             reportProduct.setAmount(request.getAmount());
-            reportProduct.setReceptions(receptions);
+            reportProduct.setUsedReceptions(receptions);
             return reportProduct;
         }).toList();
 

@@ -29,7 +29,7 @@ public class ReportProductEntity {
     private ProductEntity product;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ReportProductUsedReceptionsEntity> receptions = new ArrayList<>();
+    List<ReportProductUsedReceptionsEntity> usedReceptions = new ArrayList<>();
 
     @Column(columnDefinition = "DECIMAL(10,2)", nullable = false)
     @ColumnDefault(value = "0")

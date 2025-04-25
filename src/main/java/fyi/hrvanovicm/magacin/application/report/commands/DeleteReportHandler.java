@@ -1,12 +1,13 @@
 package fyi.hrvanovicm.magacin.application.report.commands;
 
+import fyi.hrvanovicm.magacin.application.BaseHandler;
 import fyi.hrvanovicm.magacin.domain.report.ReportService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DeleteReportHandler {
+public class DeleteReportHandler extends BaseHandler {
     private final ReportService reportService;
 
     @Autowired

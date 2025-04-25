@@ -1,5 +1,6 @@
 package fyi.hrvanovicm.magacin.domain.unit_measure;
 
+import fyi.hrvanovicm.magacin.infrastructure.persistance.UnitMeasureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

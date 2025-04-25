@@ -19,6 +19,12 @@ public class Router {
     private final FxWeaver fxWeaver;
 
     @Setter
+    private double width;
+
+    @Setter
+    private double height;
+
+    @Setter
     private Stage primaryStage;
 
     @Autowired
@@ -49,15 +55,19 @@ public class Router {
         view.ifPresent(node -> {
             Parent root = (Parent) node;
 
-            Scene scene = new Scene(root,  primaryStage.getWidth(), primaryStage.getHeight());
+            var selectedWidth = width;
+            var selectedHeight = height;
+            Scene scene = new Scene(root, width, height);
 
             scene.getRoot().setStyle(
-                    String.format("-fx-width: %f; -fx-height: %f;", primaryStage.getWidth(), primaryStage.getHeight())
+                    String.format("-fx-width: %f; -fx-height: %f;", width, height)
             );
 
             primaryStage.setScene(scene);
             primaryStage.sizeToScene();
-            primaryStage.show();
+
+            width = selectedWidth;
+            height = selectedHeight;
         });
     }
 }

@@ -273,8 +273,16 @@ public class ProductEditController implements AutoLoadController {
             if(product.getCategory() != ProductCategory.PRODUCT) {
                 this.receptionTable.setDisable(true);
             }
+
+            this.deleteProductBtn.setDisable(true);
+            this.deleteProductBtn.setManaged(true);
         } else {
             this.titleLabel.setText("Novi artikal");
+
+            this.deleteProductBtn.setDisable(false);
+            this.deleteProductBtn.setManaged(false);
+
+            this.receptionTable.setDisable(true);
         }
 
         this.receptionTable.refresh();
@@ -282,28 +290,42 @@ public class ProductEditController implements AutoLoadController {
 
     private void save() {
         var request = new ProductEditRequest();
-        request.setName(nameInput.getText());
-        request.setCode(codeInput.getText());
-        request.setCategory(categoryCombo.getValue());
-        request.setDescriptionHtml(descriptionHtmlEditor.getHtmlText());
-        request.setJmId(unitMeasureCombo.getSelectionModel().getSelectedItem().getId());
-        request.setInStockWarningAmount(Float.valueOf(inStockWarningAmountInput.getText()));
-        request.setInStockAmount(Float.valueOf(inStockAmountInput.getText()));
-        request.setReceptions(
-                this.receptionTable.getItems()
-                        .stream()
-                        .filter((reception) -> reception.getRawMaterialProduct() != null)
-                        .map(ReceptionEditRequestDTO::fromDTO)
-                        .toList()
-        );
+        try {
+            request.setName(nameInput.getText());
+            request.setCode(codeInput.getText());
+            request.setCategory(categoryCombo.getValue());
+            request.setDescriptionHtml(descriptionHtmlEditor.getHtmlText());
+            request.setJmId(
+                    unitMeasureCombo.getSelectionModel().getSelectedItem() != null
+                            ? unitMeasureCombo.getSelectionModel().getSelectedItem().getId()
+                            : null
+            );
+            request.setInStockWarningAmount(Float.valueOf(inStockWarningAmountInput.getText()));
+            request.setInStockAmount(Float.valueOf(inStockAmountInput.getText()));
+            request.setReceptions(
+                    this.receptionTable.getItems()
+                            .stream()
+                            .filter((reception) -> reception.getRawMaterialProduct() != null)
+                            .map(ReceptionEditRequestDTO::fromDTO)
+                            .toList()
+            );
+        } catch (Exception e) {
+            dialogService.showErrorDialog("Sva polja nisu validna!");
+            e.printStackTrace();
+            return;
+        }
 
-        this.product = (product == null)
-                ? this.createProductHandler.handle(request)
-                : this.updateProductHandler.handle(product.getId(), request);
+        try {
+            this.product = (product == null)
+                    ? this.createProductHandler.handle(request)
+                    : this.updateProductHandler.handle(product.getId(), request);
 
-        this.load(product.getId());
-
-        this.notificationService.notifyUser("Uspješno sačuvan artikal!");
+            this.notificationService.notifyUser("Uspješno sačuvan artikal!");
+            this.load(product.getId());
+        } catch (Exception e) {
+            dialogService.showErrorDialog(e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void reset() {

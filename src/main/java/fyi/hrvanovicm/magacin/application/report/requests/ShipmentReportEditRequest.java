@@ -1,15 +1,17 @@
 package fyi.hrvanovicm.magacin.application.report.requests;
 
-import fyi.hrvanovicm.magacin.domain.report.ReceiptReportEntity;
-import fyi.hrvanovicm.magacin.domain.report.ReportEntity;
-import fyi.hrvanovicm.magacin.domain.report.ReportType;
-import fyi.hrvanovicm.magacin.domain.report.ShipmentReportEntity;
+import fyi.hrvanovicm.magacin.domain.report.*;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class ShipmentReportRequest extends ReportEditRequest {
+public final class ShipmentReportEditRequest extends ReportEditRequest {
+    @Size(
+            max = ReportValidationRulesUtils.COMPANY_NAME_MAX_CHARACTERS,
+            message = "Polje primaoc sadrži previše karaktera!"
+    )
     String receiptCompanyName;
 
     @Override
@@ -19,6 +21,7 @@ public class ShipmentReportRequest extends ReportEditRequest {
         report.setType(ReportType.SHIPMENT);
         if(report.getShipmentReport() == null) {
             report.setShipmentReport(new ShipmentReportEntity());
+            report.getShipmentReport().setReport(report);
         }
 
         report.getShipmentReport().setReceiptCompanyName(this.getReceiptCompanyName());

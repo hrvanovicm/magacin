@@ -1,5 +1,6 @@
 package fyi.hrvanovicm.magacin.application.product.commands;
 
+import fyi.hrvanovicm.magacin.application.BaseHandler;
 import fyi.hrvanovicm.magacin.application.product.dto.ProductDetailsDTO;
 import fyi.hrvanovicm.magacin.domain.products.ProductEntity;
 import fyi.hrvanovicm.magacin.application.product.requests.ProductEditRequest;
@@ -13,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UpdateProductHandler {
+public class UpdateProductHandler extends BaseHandler {
     private final ProductService productService;
     private final UnitMeasureService unitMeasureService;
 
@@ -36,7 +37,6 @@ public class UpdateProductHandler {
                     .filter(rec -> rec.getId().equals(receptionRequest.getId()))
                     .findFirst()
                     .orElseGet(ProductReceptionEntity::new);
-
             var rawMaterialProduct = this.productService.getById(receptionRequest.getRawMaterialId()).orElseThrow(EntityNotFoundException::new);
             receptionRequest.fill(reception, product, rawMaterialProduct);
             return reception;

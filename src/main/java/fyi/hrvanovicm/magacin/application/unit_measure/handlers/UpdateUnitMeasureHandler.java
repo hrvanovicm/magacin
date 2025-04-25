@@ -1,5 +1,6 @@
 package fyi.hrvanovicm.magacin.application.unit_measure.handlers;
 
+import fyi.hrvanovicm.magacin.application.BaseHandler;
 import fyi.hrvanovicm.magacin.application.unit_measure.dto.UnitMeasureDTO;
 import fyi.hrvanovicm.magacin.application.unit_measure.requests.UnitMeasureEditRequest;
 import fyi.hrvanovicm.magacin.domain.unit_measure.UnitMeasureService;
@@ -9,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UpdateUnitMeasureHandler {
+public class UpdateUnitMeasureHandler extends BaseHandler {
     private final UnitMeasureService unitMeasureService;
 
     @Autowired

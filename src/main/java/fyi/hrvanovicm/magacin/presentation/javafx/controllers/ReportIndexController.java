@@ -108,7 +108,7 @@ public class ReportIndexController implements AutoLoadController {
 
         var params = ReportSearchParamsDTO.builder()
                 .search(filterSearchInput.getText())
-              //  .types(filterTypeChoice.getCheckModel().getCheckedItems().stream().map(ReportType))
+                .types(filterTypeChoice.getCheckModel().getCheckedItems().stream().map(ReportType::getValue).toList())
                 .signedDateFrom(filterDateFromCombo.getValue() != null ? filterDateFromCombo.getValue().toString() : null)
                 .signedDateTo(filterDateToCombo.getValue() != null ? filterDateToCombo.getValue().toString() : null)
                 .company(filterCompanyCombo.getValue())

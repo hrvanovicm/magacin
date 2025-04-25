@@ -28,11 +28,12 @@
                         </Label>
                         <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
                            <children>
-                              <Button fx:id="refreshBtn" mnemonicParsing="false" text="Osvježi">
+                              <Button fx:id="saveBtn" mnemonicParsing="false" text="Sačuvaj">
                                  <HBox.margin>
                                     <Insets right="10.0" />
                                  </HBox.margin>
                               </Button>
+                              <Button fx:id="refreshBtn" mnemonicParsing="false" text="Osvježi" />
                            </children>
                            <opaqueInsets>
                               <Insets />

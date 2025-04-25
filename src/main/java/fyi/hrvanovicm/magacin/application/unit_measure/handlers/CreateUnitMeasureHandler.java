@@ -1,5 +1,6 @@
 package fyi.hrvanovicm.magacin.application.unit_measure.handlers;
 
+import fyi.hrvanovicm.magacin.application.BaseHandler;
 import fyi.hrvanovicm.magacin.application.product.dto.ProductDetailsDTO;
 import fyi.hrvanovicm.magacin.application.unit_measure.dto.UnitMeasureDTO;
 import fyi.hrvanovicm.magacin.application.unit_measure.requests.UnitMeasureEditRequest;
@@ -10,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CreateUnitMeasureHandler {
+public class CreateUnitMeasureHandler extends BaseHandler {
     private final UnitMeasureService unitMeasureService;
 
     @Autowired

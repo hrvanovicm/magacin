@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import fyi.hrvanovicm.magacin.application.product.dto.ProductDetailsDTO;
+import fyi.hrvanovicm.magacin.infrastructure.persistance.ProductRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;

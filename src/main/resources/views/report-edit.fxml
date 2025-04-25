@@ -78,7 +78,7 @@
                             <FlowPane orientation="VERTICAL" prefHeight="53.0" prefWidth="206.0">
                                 <children>
                                     <Label prefHeight="18.0" prefWidth="111.0" text="Datum izdavanja" />
-                                    <DatePicker fx:id="signedOnDatePicker" prefWidth="206.0" />
+                                    <DatePicker fx:id="signedOnDatePicker" editable="false" prefWidth="206.0" />
                                 </children>
                             </FlowPane>
                             <FlowPane orientation="VERTICAL" prefHeight="53.0" prefWidth="206.0">

@@ -1,5 +1,6 @@
 package fyi.hrvanovicm.magacin.application.report.commands;
 
+import fyi.hrvanovicm.magacin.application.BaseHandler;
 import fyi.hrvanovicm.magacin.application.report.dto.ReportDTO;
 import fyi.hrvanovicm.magacin.application.report.dto.ReportDetailsDTO;
 import fyi.hrvanovicm.magacin.application.report.queries.ReportQueryService;
@@ -15,6 +16,7 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.view.JasperViewer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -24,7 +26,7 @@ import java.io.InputStream;
 import java.util.*;
 
 @Component
-public class ReportExportHandler {
+public class ReportExportHandler extends BaseHandler {
     @Value("classpath:pdf/receipt.jrxml")
     Resource resourceFile;
 
@@ -59,7 +61,8 @@ public class ReportExportHandler {
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("title", report.toString());
 
-            return JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            var filled = JasperFillManager.fillReport(jasperReport, parameters, dataSource);
+            JasperViewer.viewReport(filled, false);
         } catch (Exception e) {
             e.printStackTrace();
         }

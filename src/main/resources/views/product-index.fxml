@@ -34,7 +34,7 @@
                         </Label>
                         <HBox alignment="CENTER_RIGHT" HBox.hgrow="ALWAYS">
                            <children>
-                              <Button fx:id="createBtn" mnemonicParsing="false" text="Kreiraj proizvod">
+                              <Button fx:id="createBtn" mnemonicParsing="false" text="Kreiraj artikal">
                                  <HBox.margin>
                                     <Insets right="10.0" />
                                  </HBox.margin>
