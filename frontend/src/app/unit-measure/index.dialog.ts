@@ -1,20 +1,20 @@
-import { AfterViewInit, Component, inject, ViewChild } from '@angular/core';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatDivider } from '@angular/material/divider';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { UnitMeasureService } from './unit-measure.service';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatExpansionModule, MatExpansionPanel } from '@angular/material/expansion';
-import { MatIconModule } from '@angular/material/icon';
-import { unit } from '../../../wailsjs/go/models';
-import UnitMeasure = unit.UnitMeasure;
-import { MatSnackBar } from '@angular/material/snack-bar';
+import {Component, inject, ViewChild} from '@angular/core';
+import {MatDialogModule, MatDialogRef} from '@angular/material/dialog';
+import {MatButtonModule} from '@angular/material/button';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatDivider} from '@angular/material/divider';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {MatExpansionModule, MatExpansionPanel} from '@angular/material/expansion';
+import {MatIconModule} from '@angular/material/icon';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatDialog} from '@angular/material/dialog';
+import {lastValueFrom} from 'rxjs';
+import {UnitMeasure} from '../api';
+import {ServerManagerService} from '../core/server-manager.service';
+import {ConfirmDialog} from '../shared/confirm-dialog';
 
 @Component({
   template: `
@@ -26,44 +26,31 @@ import { MatSnackBar } from '@angular/material/snack-bar';
             <mat-expansion-panel-header>
               <mat-panel-title>
                 <mat-icon>add</mat-icon>
-                <span class="ml-3"> Kreiraj mjernu jedinicu </span>
+                <span class="ml-3">Kreiraj mjernu jedinicu</span>
               </mat-panel-title>
             </mat-expansion-panel-header>
-            <form
-              class="flex flex-row justify-between gap-x-3"
-              [formGroup]="createForm"
-              (submit)="submit()"
-            >
-              <mat-form-field>
+            <form class="flex flex-row items-center gap-x-3" [formGroup]="createForm" (submit)="create()">
+              <mat-form-field class="w-full">
                 <mat-label>Naziv</mat-label>
                 <input matInput formControlName="name" />
               </mat-form-field>
-              <mat-checkbox formControlName="is_integer" value="true"> Cijeli broj</mat-checkbox>
-              <button matButton="filled" type="submit">Sačuvaj</button>
+              <button matButton="filled" type="submit" [disabled]="creating">Sačuvaj</button>
             </form>
           </mat-expansion-panel>
         </mat-accordion>
       </div>
-      <mat-divider class="!mt-5"></mat-divider>
-      <div class="mt-3 max-h-80 overflow-y-auto">
+      <mat-divider class="!mt-5"/>
+      <mat-progress-bar mode="indeterminate" [class.invisible]="!loading"/>
+      <div class="mt-1 max-h-80 overflow-y-auto">
         <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 w-full">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>Naziv</th>
             <td mat-cell *matCellDef="let element">{{ element.name }}</td>
           </ng-container>
-          <ng-container matColumnDef="is_integer">
-            <th mat-header-cell *matHeaderCellDef>Cijeli broj</th>
-            <td mat-cell *matCellDef="let element">
-              <mat-checkbox
-                [checked]="element.isInteger"
-                (click)="toggleIsInteger(element)"
-              ></mat-checkbox>
-            </td>
-          </ng-container>
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let element">
-              <button matIconButton (click)="delete(element)">
+              <button matIconButton (click)="delete(element)" [disabled]="loading">
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
@@ -74,8 +61,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button matButton mat-dialog-close>Odustani</button>
-      <button matButton="filled" cdkFocusInitial (click)="saveAll()">Sačuvaj</button>
+      <button matButton mat-dialog-close>Zatvori</button>
     </mat-dialog-actions>
   `,
   imports: [
@@ -85,80 +71,70 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
-    MatTabsModule,
     MatDivider,
     MatTableModule,
-    MatCheckboxModule,
+    MatProgressBarModule,
     ReactiveFormsModule,
   ],
 })
-export class UnitMeasureIndexDialog implements AfterViewInit {
-  unitMeasureService = inject(UnitMeasureService);
+export class UnitMeasureIndexDialog {
+  private readonly serverManager = inject(ServerManagerService);
+  private readonly snackbar = inject(MatSnackBar);
+  private readonly matDialog = inject(MatDialog);
+  readonly dialogRef = inject(MatDialogRef<UnitMeasureIndexDialog>);
 
   @ViewChild('createPanel') createPanel!: MatExpansionPanel;
 
-  readonly dialogRef = inject(MatDialogRef<UnitMeasureIndexDialog>);
-  readonly snackbar = inject(MatSnackBar);
-  readonly displayedColumns: string[] = ['name', 'is_integer', 'actions'];
+  readonly displayedColumns = ['name', 'actions'];
   readonly dataSource = new MatTableDataSource<UnitMeasure>([]);
-
   readonly createForm = new FormGroup({
     name: new FormControl<string>('', [Validators.required]),
-    is_integer: new FormControl<boolean>(false, [Validators.required]),
   });
 
-  async ngAfterViewInit() {
-    this.dataSource.data = await this.unitMeasureService.getAll();
+  loading = false;
+  creating = false;
+
+  async ngOnInit() {
+    await this.reload();
   }
 
-  async toggleIsInteger(unitMeasure: UnitMeasure) {
-    let data = this.dataSource.data;
-
-    data.map((um) => {
-      if (unitMeasure.id == um.id) {
-        um.isInteger = !um.isInteger;
-      }
-      return um;
-    });
-
-    this.dataSource.data = data;
-  }
-
-  async delete(unitMeasure: UnitMeasure) {
-    this.dataSource.data = this.dataSource.data.filter((u) => u.id != unitMeasure.id);
-  }
-
-  async submit() {
-    if (!this.createForm.valid) {
-      return;
-    }
-
-    let formValue = this.createForm.value;
-
-    this.dataSource.data = [
-      ...this.dataSource.data,
-      {
-        id: 0,
-        name: formValue.name as string,
-        isInteger: formValue.is_integer as boolean,
-      },
-    ];
-
-    this.createPanel.close();
-    this.createForm.setValue({
-      name: null,
-      is_integer: false,
-    });
-  }
-
-  async saveAll() {
+  private async reload() {
+    this.loading = true;
     try {
-      await this.unitMeasureService.saveAll(this.dataSource.data);
-      this.snackbar.open(`✅ Uspješno sačuvane mjerne jedinice!`);
-      this.dialogRef.close();
+      this.dataSource.data = await this.serverManager.activeServer()!.api.um.list({});
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  async create() {
+    if (!this.createForm.valid) return;
+    this.creating = true;
+    try {
+      await this.serverManager.activeServer()?.api.um.save({id: 0, name: this.createForm.value.name!});
+      this.createForm.reset();
+      this.createPanel.close();
+      await this.reload();
     } catch (error) {
-      this.snackbar.open(`❌ Došlo je do greške! ${error}`);
+      this.snackbar.open(`Greška: ${error}`);
+    } finally {
+      this.creating = false;
+    }
+  }
+
+  async delete(um: UnitMeasure) {
+    const confirmed = await lastValueFrom(
+      this.matDialog.open(ConfirmDialog, {
+        data: {title: 'Obriši mjernu jedinicu', message: `Da li sigurno želite obrisati "${um.name}"?`, confirmLabel: 'Obriši'},
+      }).afterClosed()
+    );
+    if (!confirmed) return;
+
+    try {
+      await this.serverManager.activeServer()?.api.um.delete({ID: um.id as any});
+      this.dataSource.data = this.dataSource.data.filter(u => u.id !== um.id);
+    } catch (error) {
+      this.snackbar.open(`Greška: ${error}`);
     }
   }
 }

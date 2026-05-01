@@ -1,91 +1,136 @@
 package app
 
 import (
-	"context"
+	"fmt"
+	"hrvanovicm/magacin/dbmanager"
+	"hrvanovicm/magacin/internal/activitylog"
 	"hrvanovicm/magacin/internal/article"
+	"hrvanovicm/magacin/internal/report"
+	"os"
+	"path/filepath"
+	"strings"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// GetAllArticles
-func (a *WailsApp) GetAllArticles() ([]article.Article, error) {
-	response := []article.Article{}
+type ListArticlesRequest = article.ListQuery
 
-	err := a.runWithReadTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if articles, err := article.FindAll(ctx, tx); err != nil {
-			return err
-		} else {
-			response = articles
-		}
-
-		return nil
-	})
+func (a *WailsApp) ListArticles(req ListArticlesRequest) ([]article.Article, error) {
+	articles, err := article.List(a.getRequest(), req)
 
 	if err != nil {
-		a.HandleError(err)
-		return response, err
+		a.report(err)
+		return articles, err
 	}
 
-	return response, nil
+	return articles, nil
 }
 
-// GetAllReceptionsByArticleID
-func (a *WailsApp) GetAllReceptionsByArticleID(id int64) ([]article.Recipe, error) {
-	response := []article.Recipe{}
+type ListArticlesPagedRequest = article.ListPagedQuery
 
-	err := a.runWithReadTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if recipes, err := article.FindAllRecipes(ctx, tx, id); err != nil {
-			return err
-		} else {
-			response = recipes
-		}
-
-		return nil
-	})
+func (a *WailsApp) ListArticlesPaged(req ListArticlesPagedRequest) (dbmanager.PagedResult[article.Article], error) {
+	articles, err := article.ListPaged(a.getRequest(), req)
 
 	if err != nil {
-		a.HandleError(err)
-		return response, err
+		a.report(err)
+		return articles, err
 	}
 
-	return response, err
+	return articles, nil
 }
 
-// SaveArticle
-func (a *WailsApp) SaveArticle(art *article.Article, recs []article.Recipe) error {
-	err := a.runWithTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if err := article.Save(ctx, tx, art); err != nil {
-			return err
-		}
+type GetArticleRequest = article.GetQuery
 
-		if err := article.SaveRecipes(ctx, tx, art.ID, recs); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
+func (a *WailsApp) GetArticle(req GetArticleRequest) (*article.Article, error) {
+	art, err := article.Get(a.getRequest(), req)
 	if err != nil {
-		a.HandleError(err)
+		a.report(err)
+		return art, err
+	}
+
+	return art, nil
+}
+
+type SaveArticleRequest = article.SaveCommand
+
+func (a *WailsApp) SaveArticle(req SaveArticleRequest) error {
+	if err := article.Save(a.getRequest(), req); err != nil {
+		a.report(err)
 		return err
 	}
 
 	return nil
 }
 
-// DeleteArticle
-func (a *WailsApp) DeleteArticle(id int64) error {
-	err := a.runWithTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if err := article.Delete(ctx, tx, id); err != nil {
-			return err
-		}
+type DeleteArticleRequest = article.DeleteCommand
 
-		return nil
-	})
+func (a *WailsApp) DeleteArticle(req DeleteArticleRequest) error {
+	if err := article.Delete(a.getRequest(), req); err != nil {
+		a.report(err)
+		return err
+	}
+
+	return nil
+}
+
+type GetArticleLogsRequest = article.GetLogsQuery
+
+func (a *WailsApp) GetArticleLogs(req GetArticleLogsRequest) ([]activitylog.Entry, error) {
+	logs, err := article.GetLogs(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+		return nil, err
+	}
+	return logs, nil
+}
+
+type GetArticleAnalyticsRequest = report.GetAnalyticsByArticleQuery
+
+func (a *WailsApp) GetArticleAnalytics(req GetArticleAnalyticsRequest) ([]report.ArticleAnalyticsResult, error) {
+	logs, err := report.GetAnalyticsByArticle(a.getRequest(), req)
 
 	if err != nil {
-		a.HandleError(err)
+		a.report(err)
+		return nil, err
+	}
+
+	return logs, nil
+}
+
+func (a *WailsApp) ExportArticles(req ListArticlesRequest) error {
+	path, err := runtime.SaveFileDialog(a.getRequest().Ctx, runtime.SaveDialogOptions{
+		Title:           "Izvoz robe",
+		DefaultFilename: "roba.xlsx",
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Excel (*.xlsx)", Pattern: "*.xlsx"},
+			{DisplayName: "CSV (*.csv)", Pattern: "*.csv"},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("export dialog: %w", err)
+	}
+	if path == "" {
+		return nil
+	}
+
+	var data []byte
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".csv":
+		data, err = article.GetExport(a.getRequest(), req)
+	default:
+		if !strings.HasSuffix(path, ".xlsx") {
+			path += ".xlsx"
+		}
+		data, err = article.GetExport(a.getRequest(), req)
+	}
+	if err != nil {
+		a.report(err)
 		return err
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		a.report(err)
+		return fmt.Errorf("export write: %w", err)
 	}
 
 	return nil
