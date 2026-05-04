@@ -2,9 +2,9 @@ package app
 
 import (
 	"context"
+	"hrvanovicm/magacin/infra/paged"
 	"time"
 
-	"hrvanovicm/magacin/dbmanager"
 	"hrvanovicm/magacin/internal/activitylog"
 )
 
@@ -12,10 +12,10 @@ type GetActivityLogsPagedRequest struct {
 	SubjectType string  `json:"subjectType"`
 	SubjectID   int64   `json:"subjectId"`
 	Search      *string `json:"search"`
-	dbmanager.Paged
+	paged.Paged
 }
 
-func (a *WailsApp) GetActivityLogsPaged(req GetActivityLogsPagedRequest) (dbmanager.PagedResult[activitylog.Entry], error) {
+func (a *WailsApp) GetActivityLogsPaged(req GetActivityLogsPagedRequest) (paged.PagedResult[activitylog.Entry], error) {
 	ctx, cancel := context.WithTimeout(a.getRequest().Ctx, 5*time.Second)
 	defer cancel()
 
@@ -27,7 +27,7 @@ func (a *WailsApp) GetActivityLogsPaged(req GetActivityLogsPagedRequest) (dbmana
 	})
 	if err != nil {
 		a.report(err)
-		return dbmanager.NewDefaultPagedResult[activitylog.Entry](), err
+		return paged.NewDefaultPagedResult[activitylog.Entry](), err
 	}
 	return result, nil
 }

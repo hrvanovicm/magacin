@@ -1,4 +1,4 @@
-package dbmanager
+package paged
 
 type PagedResult[T any] struct {
 	Content []T   `json:"content"`

@@ -94,7 +94,7 @@ class ExternalAccountService implements AccountService {
     firstValueFrom(this.http.get<Account>(`${this.base}/api/accounts/${req.ID}`));
 
   save = (req: AccountSaveRequest) =>
-    firstValueFrom(this.http.post<void>(`${this.base}/api/accounts`, req));
+    firstValueFrom(this.http.post<number>(`${this.base}/api/accounts`, req));
 
   delete = (req: AccountDeleteRequest) =>
     firstValueFrom(this.http.delete<void>(`${this.base}/api/accounts/${req.ID}`));
@@ -119,7 +119,7 @@ class ExternalArticleService implements ArticleService {
     firstValueFrom(this.http.get<Article>(`${this.base}/api/articles/${req.ID}`));
 
   save = (req: Article) =>
-    firstValueFrom(this.http.post<void>(`${this.base}/api/articles`, req));
+    firstValueFrom(this.http.post<number>(`${this.base}/api/articles`, req));
 
   delete = (req: ArticleDeleteRequest) =>
     firstValueFrom(this.http.delete<void>(`${this.base}/api/articles/${req.ID}`));
@@ -148,7 +148,7 @@ class ExternalCompanyService implements CompanyService {
     firstValueFrom(this.http.get<Company>(`${this.base}/api/companies/${req.ID}`));
 
   save = (req: CompanySaveRequest) =>
-    firstValueFrom(this.http.post<void>(`${this.base}/api/companies`, req));
+    firstValueFrom(this.http.post<number>(`${this.base}/api/companies`, req));
 
   delete = (req: CompanyDeleteRequest) =>
     firstValueFrom(this.http.delete<void>(`${this.base}/api/companies/${req.ID}`));
@@ -178,7 +178,7 @@ class ExternalReportService implements ReportService {
   };
 
   save = (req: Report) =>
-    firstValueFrom(this.http.post<void>(`${this.base}/api/reports`, req));
+    firstValueFrom(this.http.post<number>(`${this.base}/api/reports`, req));
 
   delete = (req: ReportDeleteRequest) =>
     firstValueFrom(this.http.delete<void>(`${this.base}/api/reports/${req.ID}`));
@@ -242,7 +242,7 @@ class ExternalUmService implements UmService {
     firstValueFrom(this.http.get<UnitMeasure[]>(`${this.base}/api/unit-measures`, {params: toParams(req as any)}));
 
   save = (req: UmSaveRequest) =>
-    firstValueFrom(this.http.post<void>(`${this.base}/api/unit-measures`, req));
+    firstValueFrom(this.http.post<number>(`${this.base}/api/unit-measures`, req));
 
   delete = (req: UmDeleteRequest) =>
     firstValueFrom(this.http.delete<void>(`${this.base}/api/unit-measures/${req.ID}`));

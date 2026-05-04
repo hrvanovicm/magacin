@@ -1,19 +1,19 @@
 package report
 
 import (
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
+	"hrvanovicm/magacin/infra/paged"
 	"hrvanovicm/magacin/internal/article"
 	"time"
 
 	"gorm.io/gorm"
 
-	"hrvanovicm/magacin/dbmanager"
 	"hrvanovicm/magacin/internal/activitylog"
 )
 
 var ValidListTypes = []Type{TypeReceipt, TypeShipment, TypeWorkOrder}
 
-func ListPublishLocations(r core.Request) ([]string, error) {
+func ListPublishLocations(r app.Request) ([]string, error) {
 	var locations = make([]string, 0)
 
 	err := r.DB.WithContext(r.Ctx).
@@ -26,7 +26,7 @@ func ListPublishLocations(r core.Request) ([]string, error) {
 	return locations, err
 }
 
-func ListSignUsers(r core.Request) ([]string, error) {
+func ListSignUsers(r app.Request) ([]string, error) {
 	var users = make([]string, 0)
 
 	err := r.DB.WithContext(r.Ctx).
@@ -39,7 +39,7 @@ func ListSignUsers(r core.Request) ([]string, error) {
 	return users, err
 }
 
-func GetNextReportCodeForType(r core.Request, reportType Type) (string, error) {
+func GetNextReportCodeForType(r app.Request, reportType Type) (string, error) {
 	var lastCode string
 
 	err := r.DB.WithContext(r.Ctx).
@@ -68,7 +68,7 @@ type ListQuery struct {
 	ArticleName *string `json:"article_name"`
 }
 
-func List(r core.Request, qry ListQuery) ([]Report, error) {
+func List(r app.Request, qry ListQuery) ([]Report, error) {
 	query := r.DB.WithContext(r.Ctx)
 
 	spec := Specification{
@@ -102,10 +102,10 @@ func List(r core.Request, qry ListQuery) ([]Report, error) {
 
 type ListPagedQuery struct {
 	ListQuery
-	dbmanager.Paged
+	paged.Paged
 }
 
-func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Report], error) {
+func ListPaged(r app.Request, qry ListPagedQuery) (paged.PagedResult[Report], error) {
 	query := r.DB.WithContext(r.Ctx).Model(&Report{})
 
 	spec := Specification{
@@ -124,7 +124,7 @@ func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Report
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
-		return dbmanager.NewDefaultPagedResult[Report](), err
+		return paged.NewDefaultPagedResult[Report](), err
 	}
 
 	var reports = make([]Report, 0)
@@ -141,10 +141,10 @@ func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Report
 		Find(&reports).Error
 
 	if err != nil {
-		return dbmanager.NewDefaultPagedResult[Report](), err
+		return paged.NewDefaultPagedResult[Report](), err
 	}
 
-	res := dbmanager.PagedResult[Report]{
+	res := paged.PagedResult[Report]{
 		Content: reports,
 		Total:   total,
 		Page:    qry.Page,
@@ -158,7 +158,7 @@ type GetQuery struct {
 	ID uint
 }
 
-func Get(r core.Request, qry GetQuery) (*Report, error) {
+func Get(r app.Request, qry GetQuery) (*Report, error) {
 	var acc Report
 
 	err := r.DB.WithContext(r.Ctx).
@@ -189,7 +189,7 @@ type GetAnalyticsByArticleQuery struct {
 	ArticleID uint
 }
 
-func GetAnalyticsByArticle(r core.Request, qry GetAnalyticsByArticleQuery) ([]ArticleAnalyticsResult, error) {
+func GetAnalyticsByArticle(r app.Request, qry GetAnalyticsByArticleQuery) ([]ArticleAnalyticsResult, error) {
 	now := time.Now()
 	months := make([]ArticleAnalyticsResult, 12)
 	byKey := make(map[string]*ArticleAnalyticsResult)
@@ -253,7 +253,7 @@ type GetLogsQuery struct {
 	ID int64
 }
 
-func GetLogs(r core.Request, qry GetLogsQuery) ([]activitylog.Entry, error) {
+func GetLogs(r app.Request, qry GetLogsQuery) ([]activitylog.Entry, error) {
 	return activitylog.GetLogs(r, activitylog.GetLogsQuery{
 		SubjectID:   qry.ID,
 		SubjectType: activitylog.SubjectReport,

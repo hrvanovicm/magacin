@@ -40,7 +40,7 @@ export class LocalReportService implements ReportService {
     return await wailsApp.GetNextReportCodeForType(type);
   }
 
-  async save(req: ReportSaveRequest): Promise<void> {
+  async save(req: ReportSaveRequest): Promise<number> {
     return await wailsApp.SaveReport(req);
   }
 

@@ -3,7 +3,7 @@ package report
 import (
 	"errors"
 	"fmt"
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 	"hrvanovicm/magacin/internal/article"
 
 	"gorm.io/gorm"
@@ -11,7 +11,7 @@ import (
 
 type SaveCommand = Report
 
-func Save(r core.Request, cmd SaveCommand) error {
+func Save(r app.Request, cmd SaveCommand) (uint, error) {
 	isNew := cmd.ID == 0
 
 	var old *Report
@@ -30,7 +30,7 @@ func Save(r core.Request, cmd SaveCommand) error {
 	}
 
 	if err := refreshStockAmounts(r, old, cmd); err != nil {
-		return err
+		return 0, err
 	}
 
 	err := r.DB.WithContext(r.Ctx).
@@ -38,13 +38,13 @@ func Save(r core.Request, cmd SaveCommand) error {
 		Omit("Articles.Article", "Articles.Recipes.RawMaterial").
 		Save(&cmd).Error
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return uint(cmd.ID), nil
 }
 
-func refreshStockAmounts(r core.Request, old *Report, new Report) error {
+func refreshStockAmounts(r app.Request, old *Report, new Report) error {
 	if old != nil {
 		for _, art := range old.Articles {
 			fmt.Println("refreshStockAmounts", art.ArticleID)
@@ -96,7 +96,7 @@ type DeleteCommand struct {
 	ID uint
 }
 
-func Delete(r core.Request, cmd DeleteCommand) error {
+func Delete(r app.Request, cmd DeleteCommand) error {
 	var rep Report
 
 	err := r.DB.WithContext(r.Ctx).

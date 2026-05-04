@@ -2,7 +2,7 @@ package report
 
 import (
 	"fmt"
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 	"hrvanovicm/magacin/infra/export"
 )
 
@@ -15,7 +15,7 @@ type ListExportQuery struct {
 	Format string
 }
 
-func ListExport(r core.Request, qry ListExportQuery) ([]byte, error) {
+func ListExport(r app.Request, qry ListExportQuery) ([]byte, error) {
 	reports, err := List(r, qry.ListQuery)
 	if err != nil {
 		return nil, fmt.Errorf("export: list failed: %w", err)
@@ -34,7 +34,7 @@ type GetExportQuery struct {
 	Format string
 }
 
-func GetExport(r core.Request, qry GetQuery) ([]byte, error) {
+func GetExport(r app.Request, qry GetQuery) ([]byte, error) {
 	rep, err := Get(r, qry)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func GetExport(r core.Request, qry GetQuery) ([]byte, error) {
 	})
 }
 
-func ExportWorkOrderXLSX(r core.Request, qry GetQuery) ([]byte, error) {
+func ExportWorkOrderXLSX(r app.Request, qry GetQuery) ([]byte, error) {
 	rep, err := Get(r, qry)
 	if err != nil {
 		return nil, err

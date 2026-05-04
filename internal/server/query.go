@@ -1,8 +1,10 @@
 package server
 
-import "hrvanovicm/magacin/core"
+import (
+	"hrvanovicm/magacin/infra/app"
+)
 
-func ListServers(r core.Request) ([]Server, error) {
+func ListServers(r app.Request) ([]Server, error) {
 	var servers []Server
 	err := r.DB.WithContext(r.Ctx).
 		Find(&servers).
@@ -19,7 +21,7 @@ func ListServers(r core.Request) ([]Server, error) {
 	return servers, nil
 }
 
-func GetLocalConfig(r core.Request) (*LocalConfig, error) {
+func GetLocalConfig(r app.Request) (*LocalConfig, error) {
 	var cfg LocalConfig
 
 	err := r.DB.WithContext(r.Ctx).

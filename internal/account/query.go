@@ -1,8 +1,8 @@
 package account
 
 import (
-	"hrvanovicm/magacin/core"
-	"hrvanovicm/magacin/dbmanager"
+	"hrvanovicm/magacin/infra/app"
+	"hrvanovicm/magacin/infra/paged"
 
 	"gorm.io/gorm"
 )
@@ -12,7 +12,7 @@ type ListQuery struct {
 	OrderBy *string `json:"order_by"`
 }
 
-func List(r core.Request, qry ListQuery) ([]Account, error) {
+func List(r app.Request, qry ListQuery) ([]Account, error) {
 	spec := Specification{
 		Search:  qry.Search,
 		OrderBy: qry.OrderBy,
@@ -32,10 +32,10 @@ func List(r core.Request, qry ListQuery) ([]Account, error) {
 
 type ListPagedQuery struct {
 	ListQuery
-	dbmanager.Paged
+	paged.Paged
 }
 
-func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Account], error) {
+func ListPaged(r app.Request, qry ListPagedQuery) (paged.PagedResult[Account], error) {
 	spec := Specification{
 		Search:  qry.Search,
 		OrderBy: qry.OrderBy,
@@ -47,16 +47,16 @@ func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Accoun
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
-		return dbmanager.NewDefaultPagedResult[Account](), err
+		return paged.NewDefaultPagedResult[Account](), err
 	}
 
 	accounts := make([]Account, 0)
 	err := query.Limit(qry.Limit).Offset(qry.Paged.Offset()).Find(&accounts).Error
 	if err != nil {
-		return dbmanager.NewDefaultPagedResult[Account](), err
+		return paged.NewDefaultPagedResult[Account](), err
 	}
 
-	res := dbmanager.PagedResult[Account]{
+	res := paged.PagedResult[Account]{
 		Content: accounts,
 		Total:   total,
 		Page:    qry.Page,
@@ -70,7 +70,7 @@ type GetQuery struct {
 	ID uint
 }
 
-func Get(r core.Request, qry GetQuery) (*Account, error) {
+func Get(r app.Request, qry GetQuery) (*Account, error) {
 	var acc Account
 
 	err := r.DB.WithContext(r.Ctx).First(&acc, qry.ID).Error
@@ -81,9 +81,9 @@ func Get(r core.Request, qry GetQuery) (*Account, error) {
 	return &acc, nil
 }
 
-func HasAdminAccounts(r core.Request) (bool, error) {
+func HasAdminAccounts(r app.Request) (bool, error) {
 	var count int64
-	
+
 	err := r.DB.WithContext(r.Ctx).
 		Model(&Account{}).
 		Where("role = ?", RoleAdmin).

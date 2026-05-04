@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"hrvanovicm/magacin/dbmanager"
+	"hrvanovicm/magacin/infra/paged"
 	"hrvanovicm/magacin/internal/activitylog"
 	"hrvanovicm/magacin/internal/report"
 	"os"
@@ -30,7 +30,7 @@ func (a *WailsApp) ListReports(req ListReportsRequest) ([]report.Report, error) 
 
 type ListReportsPagedRequest = report.ListPagedQuery
 
-func (a *WailsApp) ListReportsPaged(req ListReportsPagedRequest) (dbmanager.PagedResult[report.Report], error) {
+func (a *WailsApp) ListReportsPaged(req ListReportsPagedRequest) (paged.PagedResult[report.Report], error) {
 	reports, err := report.ListPaged(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
@@ -70,13 +70,14 @@ func (a *WailsApp) GetNextReportCodeForType(reportType report.Type) (string, err
 
 type SaveReportRequest = report.SaveCommand
 
-func (a *WailsApp) SaveReport(req SaveReportRequest) error {
-	if err := report.Save(a.getRequest(), req); err != nil {
+func (a *WailsApp) SaveReport(req SaveReportRequest) (uint, error) {
+	repID, err := report.Save(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return repID, nil
 }
 
 type DeleteReportRequest = report.DeleteCommand

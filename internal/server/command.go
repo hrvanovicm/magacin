@@ -1,14 +1,14 @@
 package server
 
 import (
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 
 	"gorm.io/gorm"
 )
 
 type SaveConfigCommand = LocalConfig
 
-func SaveConfig(r core.Request, cmd SaveConfigCommand) error {
+func SaveConfig(r app.Request, cmd SaveConfigCommand) error {
 	return r.DB.WithContext(r.Ctx).
 		Session(&gorm.Session{AllowGlobalUpdate: true}).
 		Save(&cmd).
@@ -17,7 +17,7 @@ func SaveConfig(r core.Request, cmd SaveConfigCommand) error {
 
 type SaveServerCommand = Server
 
-func SaveServer(r core.Request, cmd SaveServerCommand) error {
+func SaveServer(r app.Request, cmd SaveServerCommand) error {
 	return r.DB.WithContext(r.Ctx).Save(&cmd).Error
 }
 
@@ -26,7 +26,7 @@ type UpdateLastUsedUsernameCommand struct {
 	Username string
 }
 
-func UpdateLastUsedUsername(r core.Request, cmd UpdateLastUsedUsernameCommand) error {
+func UpdateLastUsedUsername(r app.Request, cmd UpdateLastUsedUsernameCommand) error {
 	return r.DB.WithContext(r.Ctx).
 		Model(&Server{}).
 		Where("address = ?", cmd.Address).
@@ -40,7 +40,7 @@ type UpsertServerLastUsedCommand struct {
 	Username      string
 }
 
-func UpsertServerLastUsed(r core.Request, cmd UpsertServerLastUsedCommand) error {
+func UpsertServerLastUsed(r app.Request, cmd UpsertServerLastUsedCommand) error {
 	var s Server
 
 	err := r.DB.WithContext(r.Ctx).
@@ -57,7 +57,7 @@ func UpsertServerLastUsed(r core.Request, cmd UpsertServerLastUsedCommand) error
 		Error
 }
 
-func BatchDeleteServers(r core.Request) error {
+func BatchDeleteServers(r app.Request) error {
 	return r.DB.WithContext(r.Ctx).
 		Session(&gorm.Session{AllowGlobalUpdate: true}).
 		Delete(&Server{}).

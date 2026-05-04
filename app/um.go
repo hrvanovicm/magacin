@@ -18,13 +18,14 @@ func (a *WailsApp) ListUnitMeasurements(req ListUnitMeasurementsRequest) ([]um.U
 
 type SaveUnitMeasureRequest = um.SaveCommand
 
-func (a *WailsApp) SaveUnitMeasure(req SaveUnitMeasureRequest) error {
-	if err := um.Save(a.getRequest(), req); err != nil {
+func (a *WailsApp) SaveUnitMeasure(req SaveUnitMeasureRequest) (uint, error) {
+	umID, err := um.Save(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return umID, nil
 }
 
 type DeleteUnitMeasureRequest = um.DeleteCommand

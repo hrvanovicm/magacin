@@ -2,7 +2,7 @@ package account
 
 import (
 	"fmt"
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 	"time"
 )
 
@@ -17,7 +17,7 @@ type SignInResult struct {
 	TokenExpiresAt time.Duration
 }
 
-func SignIn(r core.Request, cmd SignInCommand) (*SignInResult, error) {
+func SignIn(r app.Request, cmd SignInCommand) (*SignInResult, error) {
 	var acc Account
 
 	err := r.DB.WithContext(r.Ctx).
@@ -66,7 +66,7 @@ type SaveCommand struct {
 	RawPassword *string `json:"password,omitempty"`
 }
 
-func Save(r core.Request, cmd SaveCommand) error {
+func Save(r app.Request, cmd SaveCommand) (uint, error) {
 	a := Account{
 		ID:       cmd.ID,
 		Username: cmd.Username,
@@ -76,17 +76,17 @@ func Save(r core.Request, cmd SaveCommand) error {
 	if cmd.RawPassword != nil && *cmd.RawPassword != "" {
 		hash, err := HashPassword(*cmd.RawPassword)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		a.PasswordHash = hash
 	}
 
 	if err := r.DB.WithContext(r.Ctx).Save(&a).Error; err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return a.ID, nil
 }
 
 type ChangePasswordCommand struct {
@@ -95,7 +95,7 @@ type ChangePasswordCommand struct {
 	NewPassword     string  `json:"new_password"`
 }
 
-func ChangePassword(r core.Request, cmd ChangePasswordCommand) error {
+func ChangePassword(r app.Request, cmd ChangePasswordCommand) error {
 	acc, err := Get(r, GetQuery{ID: cmd.ID})
 	if err != nil {
 		return err
@@ -126,7 +126,7 @@ type DeleteCommand struct {
 	ID uint
 }
 
-func Delete(r core.Request, cmd DeleteCommand) error {
+func Delete(r app.Request, cmd DeleteCommand) error {
 	if err := r.DB.WithContext(r.Ctx).Delete(&Account{}, cmd.ID).Error; err != nil {
 		return err
 	}

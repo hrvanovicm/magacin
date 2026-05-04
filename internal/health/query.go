@@ -1,7 +1,7 @@
 package health
 
 import (
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 
 	"hrvanovicm/magacin/internal/server"
 )
@@ -15,7 +15,7 @@ type CheckHealthResult struct {
 	Name string `json:"name"`
 }
 
-func CheckHealth(r core.Request) CheckHealthResult {
+func CheckHealth(r app.Request) CheckHealthResult {
 	defaultName := DefaultServerName
 	if cfg, err := server.GetLocalConfig(r); err == nil && cfg.Name != "" {
 		defaultName = cfg.Name

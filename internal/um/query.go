@@ -1,7 +1,7 @@
 package um
 
 import (
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 
 	"gorm.io/gorm"
 )
@@ -11,7 +11,7 @@ type ListQuery struct {
 	OrderBy *string `json:"order_by"`
 }
 
-func List(r core.Request, qry ListQuery) ([]UnitMeasure, error) {
+func List(r app.Request, qry ListQuery) ([]UnitMeasure, error) {
 	query := r.DB.WithContext(r.Ctx)
 
 	spec := Specification{

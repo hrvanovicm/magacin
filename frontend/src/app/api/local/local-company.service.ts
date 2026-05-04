@@ -17,7 +17,7 @@ export class LocalCompanyService implements CompanyService {
     return await wailsApp.GetCompany(req);
   }
 
-  async save(req: CompanySaveRequest): Promise<void> {
+  async save(req: CompanySaveRequest): Promise<number> {
     return await wailsApp.SaveCompany(req);
   }
 

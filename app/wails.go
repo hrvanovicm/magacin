@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 	"errors"
-	"hrvanovicm/magacin/core"
-	"hrvanovicm/magacin/dbmanager"
+	"hrvanovicm/magacin/infra/app"
+	"hrvanovicm/magacin/infra/db"
 	"hrvanovicm/magacin/internal/ws"
 	"hrvanovicm/magacin/migrations"
 	"log"
@@ -26,7 +26,7 @@ const (
 )
 
 type WailsApp struct {
-	db                   *dbmanager.Manager
+	db                   *db.Manager
 	gormDB               *gorm.DB
 	ctx                  context.Context
 	logger               *zap.Logger
@@ -45,7 +45,7 @@ func (a *WailsApp) Startup(ctx context.Context) {
 	a.InitSetup()
 
 	dbPath := getDatabaseFullPath()
-	a.db = dbmanager.NewDB(dbPath)
+	a.db = db.NewDB(dbPath)
 	if err := a.db.Connect(); err != nil {
 		a.report(err)
 		panic(err)
@@ -82,11 +82,11 @@ func (a *WailsApp) Startup(ctx context.Context) {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second, 
-			LogLevel:                  logger.Info, 
-			IgnoreRecordNotFoundError: true,   
-			ParameterizedQueries:      false,  
-			Colorful:                  true, 
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: true,
+			ParameterizedQueries:      false,
+			Colorful:                  true,
 		},
 	)
 
@@ -159,8 +159,8 @@ func getDatabaseFullPath() string {
 	return filepath.Join(homeDir, "hrvanovicm", "magacin", "magacin.db")
 }
 
-func (a *WailsApp) getRequest() core.Request {
-	return core.Request{
+func (a *WailsApp) getRequest() app.Request {
+	return app.Request{
 		DB:  a.gormDB,
 		Ctx: context.Background(),
 	}

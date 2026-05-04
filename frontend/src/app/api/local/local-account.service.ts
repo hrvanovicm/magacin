@@ -37,7 +37,7 @@ export class LocalAccountService implements AccountService {
     return await wailsApp.GetAccount(req);
   }
 
-  async save(req: AccountSaveRequest): Promise<void> {
+  async save(req: AccountSaveRequest): Promise<number> {
     return await wailsApp.SaveAccount(req);
   }
 

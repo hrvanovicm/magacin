@@ -12,7 +12,7 @@ export class LocalUmService implements UmService {
     return await wailsApp.ListUnitMeasurements(req);
   }
 
-  async save(req: UmSaveRequest): Promise<void> {
+  async save(req: UmSaveRequest): Promise<number> {
     return await wailsApp.SaveUnitMeasure(req);
   }
 

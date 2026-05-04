@@ -2,12 +2,11 @@ package activitylog
 
 import (
 	"context"
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
+	"hrvanovicm/magacin/infra/paged"
 	"time"
 
 	"gorm.io/gorm"
-
-	"hrvanovicm/magacin/dbmanager"
 )
 
 const (
@@ -60,7 +59,7 @@ func (l *Logger) Log(ctx context.Context, db *gorm.DB, subjectID int64, subjectT
 		Description: description,
 		ActorID:     l.actorID,
 	}
-	
+
 	db.WithContext(ctx).Create(&entry)
 }
 
@@ -80,10 +79,10 @@ type GetLogsPagedQuery struct {
 	SubjectID   int64
 	SubjectType string
 	Search      *string
-	dbmanager.Paged
+	paged.Paged
 }
 
-func GetLogsPaged(ctx context.Context, db *gorm.DB, qry GetLogsPagedQuery) (dbmanager.PagedResult[Entry], error) {
+func GetLogsPaged(ctx context.Context, db *gorm.DB, qry GetLogsPagedQuery) (paged.PagedResult[Entry], error) {
 	base := db.WithContext(ctx).
 		Table("main.activity_logs al").
 		Select("al.id, al.subject_id, al.subject_type, al.description, al.actor_id, al.created_at, COALESCE(a.username, 'Nepoznat') as actor_username").
@@ -96,7 +95,7 @@ func GetLogsPaged(ctx context.Context, db *gorm.DB, qry GetLogsPagedQuery) (dbma
 
 	var total int64
 	if err := base.Count(&total).Error; err != nil {
-		return dbmanager.NewDefaultPagedResult[Entry](), err
+		return paged.NewDefaultPagedResult[Entry](), err
 	}
 
 	var logs []Entry
@@ -105,13 +104,13 @@ func GetLogsPaged(ctx context.Context, db *gorm.DB, qry GetLogsPagedQuery) (dbma
 		Offset(qry.Paged.Offset()).
 		Scan(&logs).Error
 	if err != nil {
-		return dbmanager.NewDefaultPagedResult[Entry](), err
+		return paged.NewDefaultPagedResult[Entry](), err
 	}
 	if logs == nil {
 		logs = []Entry{}
 	}
 
-	return dbmanager.PagedResult[Entry]{
+	return paged.PagedResult[Entry]{
 		Content: logs,
 		Total:   total,
 		Page:    qry.Page,
@@ -119,7 +118,7 @@ func GetLogsPaged(ctx context.Context, db *gorm.DB, qry GetLogsPagedQuery) (dbma
 	}, nil
 }
 
-func GetLogs(r core.Request, qry GetLogsQuery) ([]Entry, error) {
+func GetLogs(r app.Request, qry GetLogsQuery) ([]Entry, error) {
 	var logs []Entry
 	err := r.DB.WithContext(r.Ctx).
 		Table("main.activity_logs al").

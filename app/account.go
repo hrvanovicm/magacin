@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"hrvanovicm/magacin/dbmanager"
+	"hrvanovicm/magacin/infra/paged"
 	"hrvanovicm/magacin/internal/account"
 	"hrvanovicm/magacin/internal/article"
 )
@@ -38,7 +38,7 @@ func (a *WailsApp) ListAccounts(req ListAccountsRequest) ([]account.Account, err
 
 type ListAccountsPagedRequest = article.ListPagedQuery
 
-func (a *WailsApp) ListAccountsPaged(req ListAccountsPagedRequest) (dbmanager.PagedResult[article.Article], error) {
+func (a *WailsApp) ListAccountsPaged(req ListAccountsPagedRequest) (paged.PagedResult[article.Article], error) {
 	articles, err := article.ListPaged(a.getRequest(), req)
 
 	if err != nil {
@@ -62,32 +62,20 @@ func (a *WailsApp) GetAccount(req GetAccountRequest) (*account.Account, error) {
 
 type SaveAccountRequest = account.SaveCommand
 
-func (a *WailsApp) SaveAccount(req SaveAccountRequest) error {
-	if err := account.Save(a.getRequest(), req); err != nil {
-		return err
-	}
-
-	return nil
+func (a *WailsApp) SaveAccount(req SaveAccountRequest) (uint, error) {
+	return account.Save(a.getRequest(), req)
 }
 
 type DeleteAccountRequest = account.DeleteCommand
 
 func (a *WailsApp) DeleteAccount(req DeleteAccountRequest) error {
-	if err := account.Delete(a.getRequest(), req); err != nil {
-		return err
-	}
-
-	return nil
+	return account.Delete(a.getRequest(), req)
 }
 
 type ChangePasswordAccountRequest = account.ChangePasswordCommand
 
 func (a *WailsApp) ChangePasswordAccount(req ChangePasswordAccountRequest) error {
-	if err := account.ChangePassword(a.getRequest(), req); err != nil {
-		return err
-	}
-
-	return nil
+	return account.ChangePassword(a.getRequest(), req)
 }
 
 func (a *WailsApp) HasAdminAccounts() (bool, error) {
@@ -96,13 +84,13 @@ func (a *WailsApp) HasAdminAccounts() (bool, error) {
 
 type RegisterFirstAdminRequest = account.SaveCommand
 
-func (a *WailsApp) RegisterFirstAdmin(req RegisterFirstAdminRequest) error {
+func (a *WailsApp) RegisterFirstAdmin(req RegisterFirstAdminRequest) (uint, error) {
 	hasAdmins, err := account.HasAdminAccounts(a.getRequest())
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if hasAdmins {
-		return fmt.Errorf("admin account already exists")
+		return 0, fmt.Errorf("admin account already exists")
 	}
 	role := account.RoleAdmin
 	req.ID = 0

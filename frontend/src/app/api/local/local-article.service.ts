@@ -26,7 +26,7 @@ export class LocalArticleService implements ArticleService {
     return await wailsApp.GetArticle(req);
   }
 
-  async save(req: ArticleSaveRequest): Promise<void> {
+  async save(req: ArticleSaveRequest): Promise<number> {
     return await wailsApp.SaveArticle(req);
   }
 

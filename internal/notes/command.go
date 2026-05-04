@@ -1,11 +1,11 @@
 package notes
 
 import (
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 )
 
 type SaveCommand = Note
 
-func Save(r core.Request, cmd SaveCommand) error {
+func Save(r app.Request, cmd SaveCommand) error {
 	return r.DB.WithContext(r.Ctx).Save(&cmd).Error
 }

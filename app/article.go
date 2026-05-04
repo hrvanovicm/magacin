@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"hrvanovicm/magacin/dbmanager"
+	"hrvanovicm/magacin/infra/paged"
 	"hrvanovicm/magacin/internal/activitylog"
 	"hrvanovicm/magacin/internal/article"
 	"hrvanovicm/magacin/internal/report"
@@ -28,7 +28,7 @@ func (a *WailsApp) ListArticles(req ListArticlesRequest) ([]article.Article, err
 
 type ListArticlesPagedRequest = article.ListPagedQuery
 
-func (a *WailsApp) ListArticlesPaged(req ListArticlesPagedRequest) (dbmanager.PagedResult[article.Article], error) {
+func (a *WailsApp) ListArticlesPaged(req ListArticlesPagedRequest) (paged.PagedResult[article.Article], error) {
 	articles, err := article.ListPaged(a.getRequest(), req)
 
 	if err != nil {
@@ -53,13 +53,8 @@ func (a *WailsApp) GetArticle(req GetArticleRequest) (*article.Article, error) {
 
 type SaveArticleRequest = article.SaveCommand
 
-func (a *WailsApp) SaveArticle(req SaveArticleRequest) error {
-	if err := article.Save(a.getRequest(), req); err != nil {
-		a.report(err)
-		return err
-	}
-
-	return nil
+func (a *WailsApp) SaveArticle(req SaveArticleRequest) (uint, error) {
+	return article.Save(a.getRequest(), req);
 }
 
 type DeleteArticleRequest = article.DeleteCommand

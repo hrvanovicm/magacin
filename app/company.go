@@ -30,13 +30,14 @@ func (a *WailsApp) GetCompany(req GetCompanyRequest) (*company.Company, error) {
 
 type SaveCompanyRequest = company.SaveCommand
 
-func (a *WailsApp) SaveCompany(req SaveCompanyRequest) error {
-	if err := company.Save(a.getRequest(), req); err != nil {
+func (a *WailsApp) SaveCompany(req SaveCompanyRequest) (uint, error) {
+	companyID, err := company.Save(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return companyID, nil
 }
 
 type DeleteCompanyRequest = company.DeleteCommand

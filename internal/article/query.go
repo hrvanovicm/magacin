@@ -2,16 +2,16 @@ package article
 
 import (
 	"fmt"
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 	"hrvanovicm/magacin/infra/export"
+	"hrvanovicm/magacin/infra/paged"
 
 	"gorm.io/gorm"
 
-	"hrvanovicm/magacin/dbmanager"
 	"hrvanovicm/magacin/internal/activitylog"
 )
 
-func ListCategories(r core.Request) []string {
+func ListCategories(r app.Request) []string {
 	return []string{CategoryProduct, CategoryCommercial, CategoryRawMaterial}
 }
 
@@ -22,7 +22,7 @@ type ListQuery struct {
 	IsLowInStock bool     `json:"is_low_in_stock"`
 }
 
-func List(r core.Request, qry ListQuery) ([]Article, error) {
+func List(r app.Request, qry ListQuery) ([]Article, error) {
 	query := r.DB.WithContext(r.Ctx).
 		Preload("UnitMeasure")
 
@@ -44,10 +44,10 @@ func List(r core.Request, qry ListQuery) ([]Article, error) {
 
 type ListPagedQuery struct {
 	ListQuery
-	dbmanager.Paged
+	paged.Paged
 }
 
-func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Article], error) {
+func ListPaged(r app.Request, qry ListPagedQuery) (paged.PagedResult[Article], error) {
 	query := r.DB.WithContext(r.Ctx).Model(&Article{})
 
 	spec := Specification{
@@ -61,7 +61,7 @@ func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Articl
 
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
-		return dbmanager.NewDefaultPagedResult[Article](), err
+		return paged.NewDefaultPagedResult[Article](), err
 	}
 
 	accounts := []Article{}
@@ -74,10 +74,10 @@ func ListPaged(r core.Request, qry ListPagedQuery) (dbmanager.PagedResult[Articl
 		Error
 
 	if err != nil {
-		return dbmanager.NewDefaultPagedResult[Article](), err
+		return paged.NewDefaultPagedResult[Article](), err
 	}
 
-	res := dbmanager.PagedResult[Article]{
+	res := paged.PagedResult[Article]{
 		Content: accounts,
 		Total:   total,
 		Page:    qry.Page,
@@ -91,14 +91,14 @@ type GetQuery struct {
 	ID uint
 }
 
-func Get(r core.Request, qry GetQuery) (*Article, error) {
+func Get(r app.Request, qry GetQuery) (*Article, error) {
 	var acc Article
 
 	err := r.DB.WithContext(r.Ctx).
 		Preload("UnitMeasure").
 		Preload("Recipes.RawMaterial.UnitMeasure").
 		First(&acc, qry.ID).Error
-		
+
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ type GetLogsQuery struct {
 	ID int64
 }
 
-func GetLogs(r core.Request, qry GetLogsQuery) ([]activitylog.Entry, error) {
+func GetLogs(r app.Request, qry GetLogsQuery) ([]activitylog.Entry, error) {
 	return activitylog.GetLogs(r, activitylog.GetLogsQuery{
 		SubjectID:   qry.ID,
 		SubjectType: activitylog.SubjectArticle,
@@ -119,7 +119,7 @@ func GetLogs(r core.Request, qry GetLogsQuery) ([]activitylog.Entry, error) {
 
 type GetExportQuery = ListQuery
 
-func GetExport(r core.Request, qry GetExportQuery) ([]byte, error) {
+func GetExport(r app.Request, qry GetExportQuery) ([]byte, error) {
 	articles, err := List(r, qry)
 	if err != nil {
 		return nil, fmt.Errorf("export: list failed: %w", err)

@@ -2,7 +2,7 @@ package notes
 
 import (
 	"errors"
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 
 	"gorm.io/gorm"
 )
@@ -12,7 +12,7 @@ type GetQuery struct {
 	SubjectID   int64
 }
 
-func Get(r core.Request, qry GetQuery) (*Note, error) {
+func Get(r app.Request, qry GetQuery) (*Note, error) {
 	var n Note
 
 	err := r.DB.WithContext(r.Ctx).

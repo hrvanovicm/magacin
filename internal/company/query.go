@@ -1,7 +1,7 @@
 package company
 
 import (
-	"hrvanovicm/magacin/core"
+	"hrvanovicm/magacin/infra/app"
 
 	"gorm.io/gorm"
 )
@@ -11,7 +11,7 @@ type ListQuery struct {
 	OrderBy *string `json:"order_by"`
 }
 
-func List(r core.Request, qry ListQuery) ([]Company, error) {
+func List(r app.Request, qry ListQuery) ([]Company, error) {
 	query := r.DB.WithContext(r.Ctx)
 
 	spec := Specification{
@@ -33,7 +33,7 @@ type GetQuery struct {
 	ID uint
 }
 
-func Get(r core.Request, qry GetQuery) (*Company, error) {
+func Get(r app.Request, qry GetQuery) (*Company, error) {
 	var acc Company
 
 	err := r.DB.WithContext(r.Ctx).First(&acc, qry.ID).Error

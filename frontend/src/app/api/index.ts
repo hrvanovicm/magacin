@@ -69,7 +69,7 @@ export interface ArticleService {
   list(req: ArticleListRequest): Promise<Article[]>;
   listPaged(req: ArticleListPagedRequest): Promise<Paged<Article>>;
   get(req: ArticleGetRequest): Promise<Article | undefined>;
-  save(req: ArticleSaveRequest): Promise<void>;
+  save(req: ArticleSaveRequest): Promise<number>;
   delete(req: ArticleDeleteRequest): Promise<void>;
   export(req: Partial<ArticleExportRequest>): Promise<void>;
   getLogs(req: ActivityLogGetRequest): Promise<ActivityLog[]>;
@@ -92,7 +92,7 @@ export type CompanyDeleteRequest = { ID: number };
 export interface CompanyService {
   list(req: CompanyListRequest): Promise<Company[]>;
   get(req: CompanyGetRequest): Promise<Company | undefined>;
-  save(req: CompanySaveRequest): Promise<void>;
+  save(req: CompanySaveRequest): Promise<number>;
   delete(req: CompanyDeleteRequest): Promise<void>;
 }
 
@@ -140,7 +140,7 @@ export interface ReportService {
   listSignUsers(): Promise<string[]>;
   listPublicLocations(): Promise<string[]>;
   getNextCode(type: ReportType): Promise<string>;
-  save(req: ReportSaveRequest): Promise<void>;
+  save(req: ReportSaveRequest): Promise<number>;
   delete(req: ReportDeleteRequest): Promise<void>;
   export(req: ReportExportRequest): Promise<void>;
   exportReport(req: ReportExportSingleRequest): Promise<void>;
@@ -175,7 +175,7 @@ export interface AccountService {
   list(req: AccountListRequest): Promise<Account[]>;
   listPaged(req: AccountListPagedRequest): Promise<Paged<Account>>;
   get(req: AccountGetRequest): Promise<Account | undefined>;
-  save(req: AccountSaveRequest): Promise<void>;
+  save(req: AccountSaveRequest): Promise<number>;
   delete(req: AccountDeleteRequest): Promise<void>;
   changePassword(req: AccountChangePasswordRequest): Promise<void>;
   adminChangePassword(req: AccountAdminChangePasswordRequest): Promise<void>;
@@ -195,7 +195,7 @@ export type UmDeleteRequest = { ID: number };
 
 export interface UmService {
   list(req: UmListRequest): Promise<UnitMeasure[]>;
-  save(req: UmSaveRequest): Promise<void>;
+  save(req: UmSaveRequest): Promise<number>;
   delete(req: UmDeleteRequest): Promise<void>;
 }
 
