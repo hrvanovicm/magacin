@@ -15,35 +15,29 @@ import (
 )
 
 func (a *WailsApp) ListServers() ([]server.Server, error) {
-	servers, err := server.ListServers(a.getRequest())
-
+	res, err := server.ListServers(a.getRequest())
 	if err != nil {
 		a.report(err)
-		return servers, err
 	}
-
-	return servers, nil
+	return res, err
 }
 
 func (a *WailsApp) GetLocalServerConfig() (*server.LocalConfig, error) {
-	cfg, err := server.GetLocalConfig(a.getRequest())
+	res, err := server.GetLocalConfig(a.getRequest())
 	if err != nil {
 		a.report(err)
-		return nil, err
 	}
-
-	return cfg, nil
+	return res, err
 }
 
 type SaveServerLocalConfigRequest = server.SaveConfigCommand
 
 func (a *WailsApp) SaveServerLocalConfig(req SaveServerLocalConfigRequest) error {
-	if err := server.SaveConfig(a.getRequest(), req); err != nil {
+	err := server.SaveConfig(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
 	}
-
-	return nil
+	return err
 }
 
 func (a *WailsApp) GetCompanyLogo() string {
@@ -63,7 +57,7 @@ func (a *WailsApp) GetCompanyLogo() string {
 }
 
 func (a *WailsApp) UploadCompanyLogo() error {
-	path, err := runtime.OpenFileDialog(a.getRequest().Ctx, runtime.OpenDialogOptions{
+	path, err := runtime.OpenFileDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Odaberi logo kompanije",
 		Filters: []runtime.FileFilter{
 			{DisplayName: "Slike (*.png, *.jpg, *.jpeg)", Pattern: "*.png;*.jpg;*.jpeg"},
@@ -108,21 +102,21 @@ func (a *WailsApp) RemoveCompanyLogo() error {
 }
 
 func (a *WailsApp) UpdateServerLastUsedUsername(cmd server.UpdateLastUsedUsernameCommand) error {
-	if err := server.UpdateLastUsedUsername(a.getRequest(), cmd); err != nil {
+	err := server.UpdateLastUsedUsername(a.getRequest(), cmd)
+	if err != nil {
 		a.report(err)
-		return err
 	}
-	return nil
+	return err
 }
 
 type UpsertServerLastUsedRequest = server.UpsertServerLastUsedCommand
 
 func (a *WailsApp) UpsertServerLastUsed(req UpsertServerLastUsedRequest) error {
-	if err := server.UpsertServerLastUsed(a.getRequest(), req); err != nil {
+	err := server.UpsertServerLastUsed(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
 	}
-	return nil
+	return err
 }
 
 func (a *WailsApp) ScanLocalNetwork() ([]server.DiscoveredServer, error) {
@@ -132,11 +126,6 @@ func (a *WailsApp) ScanLocalNetwork() ([]server.DiscoveredServer, error) {
 }
 
 func (a *WailsApp) ScanAndSaveServers() ([]server.Server, error) {
-	if err := server.BatchDeleteServers(a.getRequest()); err != nil {
-		a.report(err)
-		return nil, err
-	}
-
 	ctx, cancel := context.WithTimeout(a.getRequest().Ctx, 15*time.Second)
 	defer cancel()
 
@@ -168,4 +157,21 @@ func (a *WailsApp) ScanAndSaveServers() ([]server.Server, error) {
 		saved = []server.Server{}
 	}
 	return saved, nil
+}
+
+func (a *WailsApp) SaveServer(s server.Server) (int64, error) {
+	err := server.SaveServer(a.getRequest(), s)
+	if err != nil {
+		a.report(err)
+		return 0, err
+	}
+	return int64(s.ID), nil
+}
+
+func (a *WailsApp) DeleteServer(id int64) error {
+	err := a.getRequest().DB.Delete(&server.Server{}, id).Error
+	if err != nil {
+		a.report(err)
+	}
+	return err
 }

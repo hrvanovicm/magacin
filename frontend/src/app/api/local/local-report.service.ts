@@ -8,6 +8,7 @@ import {
   ReportExportRequest,
   ReportExportSingleRequest,
   ReportExportWorkOrderRequest,
+  ReportGetRequest,
   ReportListPagedRequest,
   ReportListRequest,
   ReportSaveRequest,
@@ -26,6 +27,10 @@ export class LocalReportService implements ReportService {
 
   async listPaged(req: ReportListPagedRequest): Promise<Paged<Report>> {
     return await wailsApp.ListReportsPaged(req as any) as Paged<Report>;
+  }
+
+  async get(req: ReportGetRequest): Promise<Report | undefined> {
+    return await wailsApp.GetReport(req as any) as Report;
   }
 
   async listSignUsers(): Promise<string[]> {

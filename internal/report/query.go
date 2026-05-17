@@ -231,19 +231,29 @@ func GetAnalyticsByArticle(r app.Request, qry GetAnalyticsByArticleQuery) ([]Art
 			continue
 		}
 
-		var totalAmount float32
+		var inAmount float32
+		var outAmount float32
 		for _, ha := range rep.Articles {
 			if uint(ha.ArticleID) == qry.ArticleID {
-				totalAmount += ha.Amount
+				switch rep.Type {
+				case TypeReceipt, TypeWorkOrder:
+					inAmount += ha.Amount
+				case TypeShipment:
+					outAmount += ha.Amount
+				}
+			}
+
+			if rep.Type == TypeWorkOrder {
+				for _, rec := range ha.Recipes {
+					if uint(rec.RawMaterialID) == qry.ArticleID {
+						outAmount += rec.Amount
+					}
+				}
 			}
 		}
 
-		switch rep.Type {
-		case TypeReceipt, TypeWorkOrder:
-			entry.In += totalAmount
-		case TypeShipment:
-			entry.Out += totalAmount
-		}
+		entry.In += inAmount
+		entry.Out += outAmount
 	}
 
 	return months, nil

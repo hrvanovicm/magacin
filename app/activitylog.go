@@ -19,7 +19,7 @@ func (a *WailsApp) GetActivityLogsPaged(req GetActivityLogsPagedRequest) (paged.
 	ctx, cancel := context.WithTimeout(a.getRequest().Ctx, 5*time.Second)
 	defer cancel()
 
-	result, err := activitylog.GetLogsPaged(ctx, a.database(), activitylog.GetLogsPagedQuery{
+	res, err := activitylog.GetLogsPaged(ctx, a.database(), activitylog.GetLogsPagedQuery{
 		SubjectType: req.SubjectType,
 		SubjectID:   req.SubjectID,
 		Search:      req.Search,
@@ -27,7 +27,6 @@ func (a *WailsApp) GetActivityLogsPaged(req GetActivityLogsPagedRequest) (paged.
 	})
 	if err != nil {
 		a.report(err)
-		return paged.NewDefaultPagedResult[activitylog.Entry](), err
 	}
-	return result, nil
+	return res, err
 }

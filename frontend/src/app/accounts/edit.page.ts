@@ -89,7 +89,6 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                 </mat-form-field>
               </form>
             } @else if (isAdmin()) {
-              <!-- Admin: change anyone's password without requiring current password -->
               <form class="flex flex-col gap-4 pt-4 max-w-[420px]" [formGroup]="adminPasswordForm">
                 <mat-form-field class="w-full">
                   <mat-label>Nova lozinka</mat-label>
@@ -148,7 +147,7 @@ export class AccountEditPage implements OnInit {
   private readonly serverManager = inject(ServerManagerService);
   private readonly snackbar = inject(MatSnackBar);
 
-  readonly isNew = this.route.snapshot.paramMap.get('id') === null;
+  isNew = true;
   readonly account = signal<Account | null>(null);
   readonly isAdmin = computed(() => this.serverManager.isAdmin());
 
@@ -179,17 +178,20 @@ export class AccountEditPage implements OnInit {
   );
 
   async ngOnInit() {
-    if (this.isNew) return;
+    this.route.paramMap.subscribe(async params => {
+      const idStr = params.get('id');
+      this.isNew = idStr === null;
+      if (this.isNew) return;
 
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    const acc = (history.state?.account as Account | null)
-      ?? await this.serverManager.activeServer()!.api.account.get({ID: id as any});
+      const id = Number(idStr);
+      const acc = await this.serverManager.activeServer()!.api.account.get({ID: id as any});
 
-    if (!acc) return;
-    this.account.set(acc);
-    this.form.patchValue({
-      username: acc.username,
-      role: acc.role ?? null,
+      if (!acc) return;
+      this.account.set(acc);
+      this.form.patchValue({
+        username: acc.username,
+        role: acc.role ?? null,
+      });
     });
   }
 
@@ -202,13 +204,20 @@ export class AccountEditPage implements OnInit {
       : undefined;
 
     try {
-      await this.serverManager.activeServer()!.api.account.save({
+      const savedId = await this.serverManager.activeServer()!.api.account.save({
         id: this.isNew ? 0 : this.account()!.id,
         username: v.username!,
         role: v.role ?? undefined,
         password,
       });
       this.snackbar.open(`Uspješno sačuvan korisnik ${v.username}!`);
+      
+      if (this.isNew && typeof savedId === 'number') {
+        this.router.navigate([ACCOUNTS_LINKS.edit(savedId)], {replaceUrl: true});
+      } else if (!this.isNew) {
+        const acc = await this.serverManager.activeServer()!.api.account.get({ID: this.account()!.id as any});
+        if (acc) this.account.set(acc);
+      }
     } catch (error) {
       this.snackbar.open(`Greška: ${error}`);
     }

@@ -21,16 +21,9 @@ func List(r app.Request, qry ListQuery) ([]UnitMeasure, error) {
 
 	executeFilter(query, spec)
 
-	var ums []UnitMeasure
-	if err := query.Find(&ums).Error; err != nil {
-		return nil, err
-	}
-
-	if ums == nil {
-		return []UnitMeasure{}, nil
-	}
-
-	return ums, nil
+	ums := make([]UnitMeasure, 0)
+	err := query.Find(&ums).Error
+	return ums, err
 }
 
 func executeFilter(query *gorm.DB, spec Specification) {
@@ -42,4 +35,13 @@ func executeFilter(query *gorm.DB, spec Specification) {
 	if spec.OrderBy != nil && *spec.OrderBy != "" {
 		query = query.Order(*spec.OrderBy)
 	}
+}
+
+type ListConversionsQuery struct {
+}
+
+func ListConversions(r app.Request, qry ListConversionsQuery) ([]Conversion, error) {
+	convs := make([]Conversion, 0)
+	err := r.DB.WithContext(r.Ctx).Preload("ToUnitMeasure").Find(&convs).Error
+	return convs, err
 }

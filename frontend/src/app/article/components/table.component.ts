@@ -1,5 +1,5 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {ReadableArticleCategoryPipePipe, ReadableArticleInStockAmountPipePipe} from '../pipe';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ReadableArticleCategoryPipePipe, ReadableArticleInStockAmountPipePipe } from '../pipe';
 import {
   MatCell,
   MatCellDef,
@@ -13,11 +13,11 @@ import {
   MatTable,
   MatTableDataSource
 } from '@angular/material/table';
-import {MatIcon} from '@angular/material/icon';
-import {MatSort, MatSortHeader} from '@angular/material/sort';
-import {MatIconButton} from '@angular/material/button';
-import {Article} from '../../api';
-import {PagedTableBase} from '../../shared/page/paged-table.base';
+import { MatIcon } from '@angular/material/icon';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatButtonModule } from '@angular/material/button';
+import { Article } from '../../api';
+import { PagedTableBase } from '../../shared/page/paged-table.base';
 
 export type ArticleAllowedColumns =
   | 'position'
@@ -31,7 +31,7 @@ export type ArticleAllowedColumns =
 
 @Component({
   selector: 'app-article-table',
-  providers: [{provide: PagedTableBase, useExisting: ArticleTableComponent}],
+  providers: [{ provide: PagedTableBase, useExisting: ArticleTableComponent }],
   imports: [
     ReadableArticleCategoryPipePipe,
     ReadableArticleInStockAmountPipePipe,
@@ -48,7 +48,6 @@ export type ArticleAllowedColumns =
     MatSortHeader,
     MatTable,
     MatHeaderCellDef,
-    MatIconButton,
   ],
   template: `
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort (matSortChange)="sorted.emit($event)">
@@ -86,14 +85,6 @@ export type ArticleAllowedColumns =
           <span [innerHTML]="element.inStockAmount | ReadableArticleInStockAmountPipe: element.unitMeasure"></span>
         </td>
       </ng-container>
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let element" class="text-right">
-          <button matIconButton (click)="onDeleteClick(element, $event)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
       <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
       <tr mat-row
           [class.low-stock-row]="row.inStockAmount <= row.inStockWarningAmount"
@@ -109,10 +100,9 @@ export type ArticleAllowedColumns =
   `
 })
 export class ArticleTableComponent extends PagedTableBase {
-  @Input() columns: ArticleAllowedColumns[] = ['position', 'icon', 'name', 'code', 'category', 'tags', 'in_stock_amount', 'actions'];
+  @Input() columns: ArticleAllowedColumns[] = ['position', 'icon', 'name', 'code', 'category', 'tags', 'in_stock_amount'];
 
   @Output() rowClick = new EventEmitter<Article>();
-  @Output() deleteClick = new EventEmitter<Article>();
 
   protected dataSource = new MatTableDataSource<Article>([]);
 
@@ -122,7 +112,6 @@ export class ArticleTableComponent extends PagedTableBase {
 
   onDeleteClick(row: Article, event: MouseEvent) {
     event.stopPropagation();
-    this.deleteClick.emit(row);
   }
 
   setData(changes: Article[]): void {

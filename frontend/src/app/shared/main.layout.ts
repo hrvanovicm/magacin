@@ -1,21 +1,21 @@
-import {Router, RouterLink, RouterOutlet} from '@angular/router';
-import {Component, computed, inject} from '@angular/core';
-import {MatDialog} from '@angular/material/dialog';
-import {UnitMeasureIndexDialog} from '../unit-measure/index.dialog';
-import {CompanyIndexDialog} from '../company/company-index.dialog';
-import {MatToolbar} from '@angular/material/toolbar';
-import {MatButton} from '@angular/material/button';
-import {MatDivider} from '@angular/material/divider';
-import {MatIcon} from '@angular/material/icon';
-import {ServerManagerService} from '../core/server-manager.service';
-import {OnlineStatusService} from '../core/online-status.service';
-import {APP_INFO} from '../app';
-import {ARTICLE_LINKS} from '../article/config';
-import {REPORT_LINKS} from '../report/config';
-import {ACCOUNTS_LINKS} from '../accounts/config';
-import {SETTINGS_LINKS} from '../settings/config';
-import {MatMenuModule} from '@angular/material/menu';
-import {AUTH_LINKS} from '../auth/config';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { UnitMeasureIndexDialog } from '../unit-measure/index.dialog';
+import { CompanyIndexDialog } from '../company/company-index.dialog';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatButton } from '@angular/material/button';
+import { MatDivider } from '@angular/material/divider';
+import { MatIcon } from '@angular/material/icon';
+import { ServerManagerService } from '../core/server-manager.service';
+import { OnlineStatusService } from '../core/online-status.service';
+import { APP_INFO } from '../app';
+import { ARTICLE_LINKS } from '../article/config';
+import { REPORT_LINKS } from '../report/config';
+import { ACCOUNTS_LINKS } from '../accounts/config';
+import { SETTINGS_LINKS } from '../settings/config';
+import { MatMenuModule } from '@angular/material/menu';
+import { AUTH_LINKS } from '../auth/config';
 
 @Component({
   imports: [MatToolbar, MatButton, RouterOutlet, MatDivider, RouterLink, MatIcon, MatMenuModule],
@@ -27,7 +27,9 @@ import {AUTH_LINKS} from '../auth/config';
 
       <button matButton [routerLink]="[ARTICLE_LINKS.index()]">Roba</button>
       <button matButton [routerLink]="[REPORT_LINKS.index()]">Izvještaji</button>
-      <button matButton [routerLink]="[ACCOUNTS_LINKS.index()]">Korisnici</button>
+      @if (serverManager.isAdmin()) {
+        <button matButton [routerLink]="[ACCOUNTS_LINKS.index()]">Korisnici</button>
+      }
       <button matButton (click)="openCompanyDialog()">Kompanije</button>
       <button matButton (click)="openUnitMeasureDialog()">Mjerne jedinice</button>
 
@@ -46,10 +48,12 @@ import {AUTH_LINKS} from '../auth/config';
       </button>
 
       <mat-menu #menu="matMenu">
-        <button mat-menu-item [routerLink]="[SETTINGS_LINKS.index()]">
-          <mat-icon>settings</mat-icon>
-          <span>Postavke</span>
-        </button>
+        @if (serverManager.isAdmin()) {
+          <button mat-menu-item [routerLink]="[SETTINGS_LINKS.index()]">
+            <mat-icon>settings</mat-icon>
+            <span>Postavke</span>
+          </button>
+        }
         <button mat-menu-item (click)="logout()">
           <mat-icon>logout</mat-icon>
           <span>Odjavi se</span>
@@ -96,7 +100,8 @@ export class MainLayout {
 
   openUnitMeasureDialog() {
     this.dialog.open(UnitMeasureIndexDialog, {
-      width: '1200px',
+      width: '600px',
+      maxWidth: '95vw',
       height: '600px',
     });
   }

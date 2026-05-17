@@ -27,11 +27,11 @@ type Specification struct {
 
 type Report struct {
 	ID             int64   `gorm:"primaryKey;column:id" json:"id"`
-	Type           Type    `gorm:"column:type" json:"type"`
-	Code           *string `gorm:"column:code" json:"code"`
-	Date           *string `gorm:"column:signed_at" json:"signedAt"`
-	PlaceOfPublish *string `gorm:"column:signed_at_location" json:"signedAtLocation"`
-	SignedByName   *string `gorm:"column:signed_by" json:"signedBy"`
+	Type           Type    `gorm:"column:type" json:"type" log:"tipa"`
+	Code           *string `gorm:"column:code" json:"code" log:"šifre"`
+	Date           *string `gorm:"column:signed_at" json:"signedAt" log:"datuma"`
+	PlaceOfPublish *string `gorm:"column:signed_at_location" json:"signedAtLocation" log:"mjesta izdavanja"`
+	SignedByName   *string `gorm:"column:signed_by" json:"signedBy" log:"potpisnika"`
 
 	Receipt  Receipt      `gorm:"foreignKey:ReportID" json:"receipt"`
 	Shipment Shipment     `gorm:"foreignKey:ReportID" json:"shipment"`
@@ -44,9 +44,9 @@ func (Report) TableName() string {
 
 type Receipt struct {
 	ReportID            int64           `gorm:"primaryKey;column:report_id" json:"-"`
-	SupplierCompanyName *string         `gorm:"column:supplier_company_name" json:"-"`
+	SupplierCompanyName *string         `gorm:"column:supplier_company_name" json:"-" log:"dobavljača"`
 	SupplierCompany     company.Company `gorm:"foreignKey:SupplierCompanyName;references:Name" json:"supplierCompany"`
-	SupplierReportCode  *string         `gorm:"column:supplier_report_code" json:"supplierReportCode"`
+	SupplierReportCode  *string         `gorm:"column:supplier_report_code" json:"supplierReportCode" log:"šifre dostavnice"`
 }
 
 func (Receipt) TableName() string {
@@ -55,7 +55,7 @@ func (Receipt) TableName() string {
 
 type Shipment struct {
 	ReportID           int64           `gorm:"primaryKey;column:report_id" json:"-"`
-	ReceiptCompanyName *string         `gorm:"column:receipt_company_name" json:"-"`
+	ReceiptCompanyName *string         `gorm:"column:receipt_company_name" json:"-" log:"primaoca"`
 	ReceiptCompany     company.Company `gorm:"foreignKey:ReceiptCompanyName;references:Name" json:"receiptCompany"`
 }
 

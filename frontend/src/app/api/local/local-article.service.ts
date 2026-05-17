@@ -45,4 +45,12 @@ export class LocalArticleService implements ArticleService {
   async getAnalytics(req: ArticleAnalyticsRequest): Promise<ArticleAnalyticsResult[]> {
     return await wailsApp.GetArticleAnalytics(req) as ArticleAnalyticsResult[];
   }
+
+  async saveConversion(req: any): Promise<number> {
+    return await wailsApp.SaveArticleConversion(req);
+  }
+
+  async deleteConversion(req: any): Promise<void> {
+    return await wailsApp.DeleteArticleConversion(req);
+  }
 }

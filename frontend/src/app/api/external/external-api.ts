@@ -40,6 +40,7 @@ import {
   ReportDeleteRequest,
   ReportExportRequest,
   ReportExportWorkOrderRequest,
+  ReportGetRequest,
   ReportListPagedRequest,
   ReportListRequest,
   ReportService,
@@ -76,6 +77,21 @@ function downloadBlob(blob: Blob, filename: string): void {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+async function exportFile(blob: Blob, filename: string): Promise<void> {
+  const wails = (window as any).go?.app?.WailsApp;
+  if (wails?.SaveFile) {
+    try {
+      const buffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(buffer);
+      await wails.SaveFile(filename, Array.from(uint8Array));
+      return;
+    } catch (e) {
+      console.error('Wails save failed, falling back to browser download', e);
+    }
+  }
+  downloadBlob(blob, filename);
 }
 
 class ExternalAccountService implements AccountService {
@@ -128,14 +144,20 @@ class ExternalArticleService implements ArticleService {
     const blob = await firstValueFrom(
       this.http.get(`${this.base}/api/articles/export`, {params: toParams(req as any), responseType: 'blob'})
     );
-    downloadBlob(blob, 'artikli.xlsx');
+    await exportFile(blob, 'artikli.xlsx');
   };
 
   getLogs = (req: ActivityLogGetRequest) =>
     firstValueFrom(this.http.get<ActivityLog[]>(`${this.base}/api/articles/${req.ID}/logs`));
 
   getAnalytics = (req: ArticleAnalyticsRequest)  =>
-    firstValueFrom(this.http.get<ArticleAnalyticsResult[]>(`${this.base}/api/articles/`)); 
+    firstValueFrom(this.http.get<ArticleAnalyticsResult[]>(`${this.base}/api/articles/analytics`, {params: toParams({article_id: (req as any).ArticleID})})); 
+
+  saveConversion = (req: any) =>
+    firstValueFrom(this.http.post<number>(`${this.base}/api/articles/conversions`, req));
+
+  deleteConversion = (req: any) =>
+    firstValueFrom(this.http.delete<void>(`${this.base}/api/articles/conversions/${req.ID}`));
 }
 
 class ExternalCompanyService implements CompanyService {
@@ -160,6 +182,9 @@ class ExternalReportService implements ReportService {
   listTypes = () =>
     firstValueFrom(this.http.get<ReportType[]>(`${this.base}/api/reports/types`));
 
+  get = (req: ReportGetRequest) =>
+    firstValueFrom(this.http.get<Report>(`${this.base}/api/reports/${req.ID}`));
+
   list = (req: ReportListRequest) =>
     firstValueFrom(this.http.get<Report[]>(`${this.base}/api/reports`, {params: toParams(req as any)}));
 
@@ -177,8 +202,10 @@ class ExternalReportService implements ReportService {
     return data.code;
   };
 
-  save = (req: Report) =>
-    firstValueFrom(this.http.post<number>(`${this.base}/api/reports`, req));
+  save = async (req: Report) => {
+    const res = await firstValueFrom(this.http.post<{id: number}>(`${this.base}/api/reports`, req));
+    return res.id;
+  };
 
   delete = (req: ReportDeleteRequest) =>
     firstValueFrom(this.http.delete<void>(`${this.base}/api/reports/${req.ID}`));
@@ -187,21 +214,21 @@ class ExternalReportService implements ReportService {
     const blob = await firstValueFrom(
       this.http.get(`${this.base}/api/reports/export`, {params: toParams(req as any), responseType: 'blob'})
     );
-    downloadBlob(blob, 'izvjestaji.xlsx');
+    await exportFile(blob, 'izvjestaji.xlsx');
   };
 
   exportReport = async (req: {ID: number}) => {
     const blob = await firstValueFrom(
       this.http.get(`${this.base}/api/reports/${req.ID}/export`, {responseType: 'blob'})
     );
-    downloadBlob(blob, `izvjestaj-${req.ID}.xlsx`);
+    await exportFile(blob, `izvjestaj-${req.ID}.xlsx`);
   };
 
   exportWorkOrder = async (req: ReportExportWorkOrderRequest) => {
     const blob = await firstValueFrom(
       this.http.get(`${this.base}/api/reports/${req.ID}/export-work-order`, {responseType: 'blob'})
     );
-    downloadBlob(blob, `radni-nalog-${req.ID}.xlsx`);
+    await exportFile(blob, `radni-nalog-${req.ID}.xlsx`);
   };
 
   getLogs = (req: ActivityLogGetRequest) =>
@@ -246,6 +273,15 @@ class ExternalUmService implements UmService {
 
   delete = (req: UmDeleteRequest) =>
     firstValueFrom(this.http.delete<void>(`${this.base}/api/unit-measures/${req.ID}`));
+
+  listConversions = (req: any) =>
+    firstValueFrom(this.http.get<any[]>(`${this.base}/api/unit-measures/conversions`, {params: toParams(req as any)}));
+
+  saveConversion = (req: any) =>
+    firstValueFrom(this.http.post<number>(`${this.base}/api/unit-measures/conversions`, req));
+
+  deleteConversion = (req: any) =>
+    firstValueFrom(this.http.delete<void>(`${this.base}/api/unit-measures/conversions/${req.ID}`));
 }
 
 @Injectable({providedIn: 'root'})

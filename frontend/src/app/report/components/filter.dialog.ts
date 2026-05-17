@@ -1,21 +1,21 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
-import {MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from '@angular/material/dialog';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatSelectModule} from '@angular/material/select';
-import {MatInputModule} from '@angular/material/input';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MatNativeDateModule} from '@angular/material/core';
-import {MatButton} from '@angular/material/button';
-import {FormControl, FormGroup, ReactiveFormsModule} from '@angular/forms';
-import {ReporTypeNamePipe} from '../report.pipes';
-import {ReportType, ReportTypeValues} from '../../api';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatButton } from '@angular/material/button';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ReporTypeNamePipe } from '../report.pipes';
+import { ReportType, ReportTypeValues } from '../../api';
 import {
   CompanyAutocompleteComponent,
   LocationAutocompleteComponent,
   UserAutocompleteComponent,
 } from '../../shared/inputs';
-import {ServerManagerService} from '../../core/server-manager.service';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
+import { ServerManagerService } from '../../core/server-manager.service';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 export interface ReportFilterReq {
   search?: string;
@@ -48,51 +48,52 @@ export interface ReportFilterReq {
   ],
   template: `
     <h2 mat-dialog-title>Filter</h2>
-    <mat-dialog-content class="flex flex-col gap-4 pt-2 min-w-[360px]">
+    <mat-dialog-content>
+      <div class="flex flex-col gap-4 pt-2">
+          <mat-form-field class="w-full">
+            <mat-label>Tip izvještaja</mat-label>
+            <mat-select multiple [formControl]="form.controls.types">
+              @for (type of typeValues; track type) {
+                <mat-option [value]="type">{{ type | reportTypeName }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
 
-      <mat-form-field class="w-full">
-        <mat-label>Tip izvještaja</mat-label>
-        <mat-select multiple [formControl]="form.controls.types">
-          @for (type of typeValues; track type) {
-            <mat-option [value]="type">{{ type | reportTypeName }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+          <mat-form-field class="w-full">
+            <mat-label>Sadrži artikal</mat-label>
+            <input matInput [formControl]="form.controls.article_name"
+                  [matAutocomplete]="articleAuto" (input)="filterArticles($event)" (focus)="loadArticles()"/>
+            <mat-autocomplete #articleAuto="matAutocomplete">
+              @for (name of filteredArticleNames(); track name) {
+                <mat-option [value]="name">{{ name }}</mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
 
-      <mat-form-field class="w-full">
-        <mat-label>Sadrži artikal</mat-label>
-        <input matInput [formControl]="form.controls.article_name"
-               [matAutocomplete]="articleAuto" (input)="filterArticles($event)" (focus)="loadArticles()"/>
-        <mat-autocomplete #articleAuto="matAutocomplete">
-          @for (name of filteredArticleNames(); track name) {
-            <mat-option [value]="name">{{ name }}</mat-option>
-          }
-        </mat-autocomplete>
-      </mat-form-field>
+          <app-company-autocomplete label="Kompanija" [control]="$any(form.controls.company)"/>
 
-      <app-company-autocomplete label="Kompanija" [control]="$any(form.controls.company)"/>
+          <div class="flex gap-3">
+            <mat-form-field class="flex-1">
+              <mat-label>Datum od</mat-label>
+              <input matInput [matDatepicker]="fromPicker" [formControl]="dateFromControl"
+                    (dateChange)="onDateChange('date_from', $event.value)"/>
+              <mat-datepicker-toggle matIconSuffix [for]="fromPicker"/>
+              <mat-datepicker #fromPicker/>
+            </mat-form-field>
 
-      <div class="flex gap-3">
-        <mat-form-field class="flex-1">
-          <mat-label>Datum od</mat-label>
-          <input matInput [matDatepicker]="fromPicker" [formControl]="dateFromControl"
-                 (dateChange)="onDateChange('date_from', $event.value)"/>
-          <mat-datepicker-toggle matIconSuffix [for]="fromPicker"/>
-          <mat-datepicker #fromPicker/>
-        </mat-form-field>
+            <mat-form-field class="flex-1">
+              <mat-label>Datum do</mat-label>
+              <input matInput [matDatepicker]="toPicker" [formControl]="dateToControl"
+                    (dateChange)="onDateChange('date_to', $event.value)"/>
+              <mat-datepicker-toggle matIconSuffix [for]="toPicker"/>
+              <mat-datepicker #toPicker/>
+            </mat-form-field>
+          </div>
 
-        <mat-form-field class="flex-1">
-          <mat-label>Datum do</mat-label>
-          <input matInput [matDatepicker]="toPicker" [formControl]="dateToControl"
-                 (dateChange)="onDateChange('date_to', $event.value)"/>
-          <mat-datepicker-toggle matIconSuffix [for]="toPicker"/>
-          <mat-datepicker #toPicker/>
-        </mat-form-field>
-      </div>
+          <app-location-autocomplete label="Lokacija" [control]="$any(form.controls.location)"/>
+          <app-user-autocomplete label="Potpisao" [control]="$any(form.controls.signed_by)"/>
 
-      <app-location-autocomplete label="Lokacija" [control]="$any(form.controls.location)"/>
-      <app-user-autocomplete label="Potpisao" [control]="$any(form.controls.signed_by)"/>
-
+        </div>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
@@ -133,7 +134,7 @@ export class ReportFilterDialog implements OnInit {
       const articles = await this.serverManager.activeServer()!.api.article.list({} as any);
       this.allArticleNames = articles.map(a => a.name);
       this.applyArticleFilter(this.form.controls.article_name.value ?? '');
-    } catch {}
+    } catch { }
   }
 
   filterArticles(event: Event) {
@@ -158,7 +159,7 @@ export class ReportFilterDialog implements OnInit {
   }
 
   reset() {
-    this.form.reset({types: [], article_name: '', company: '', location: '', signed_by: ''});
+    this.form.reset({ types: [], article_name: '', company: '', location: '', signed_by: '' });
     this.dateFromControl.reset(null);
     this.dateToControl.reset(null);
     this.date_from = undefined;

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -16,108 +17,88 @@ import (
 type ListArticlesRequest = article.ListQuery
 
 func (a *WailsApp) ListArticles(req ListArticlesRequest) ([]article.Article, error) {
-	articles, err := article.List(a.getRequest(), req)
-
+	res, err := article.List(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return articles, err
 	}
-
-	return articles, nil
+	return res, err
 }
 
 type ListArticlesPagedRequest = article.ListPagedQuery
 
 func (a *WailsApp) ListArticlesPaged(req ListArticlesPagedRequest) (paged.PagedResult[article.Article], error) {
-	articles, err := article.ListPaged(a.getRequest(), req)
-
+	res, err := article.ListPaged(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return articles, err
 	}
-
-	return articles, nil
+	return res, err
 }
 
 type GetArticleRequest = article.GetQuery
 
 func (a *WailsApp) GetArticle(req GetArticleRequest) (*article.Article, error) {
-	art, err := article.Get(a.getRequest(), req)
+	res, err := article.Get(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return art, err
 	}
-
-	return art, nil
+	return res, err
 }
 
 type SaveArticleRequest = article.SaveCommand
 
 func (a *WailsApp) SaveArticle(req SaveArticleRequest) (uint, error) {
-	return article.Save(a.getRequest(), req);
+	return article.Save(a.getRequest(), req)
 }
 
 type DeleteArticleRequest = article.DeleteCommand
 
 func (a *WailsApp) DeleteArticle(req DeleteArticleRequest) error {
-	if err := article.Delete(a.getRequest(), req); err != nil {
+	err := article.Delete(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
 	}
-
-	return nil
+	return err
 }
 
 type GetArticleLogsRequest = article.GetLogsQuery
 
 func (a *WailsApp) GetArticleLogs(req GetArticleLogsRequest) ([]activitylog.Entry, error) {
-	logs, err := article.GetLogs(a.getRequest(), req)
+	res, err := article.GetLogs(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return nil, err
 	}
-	return logs, nil
+	return res, err
 }
 
 type GetArticleAnalyticsRequest = report.GetAnalyticsByArticleQuery
 
 func (a *WailsApp) GetArticleAnalytics(req GetArticleAnalyticsRequest) ([]report.ArticleAnalyticsResult, error) {
-	logs, err := report.GetAnalyticsByArticle(a.getRequest(), req)
-
+	res, err := report.GetAnalyticsByArticle(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return nil, err
 	}
-
-	return logs, nil
+	return res, err
 }
 
 func (a *WailsApp) ExportArticles(req ListArticlesRequest) error {
-	path, err := runtime.SaveFileDialog(a.getRequest().Ctx, runtime.SaveDialogOptions{
+	currentDate := time.Now().Format("2006-01-02")
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:           "Izvoz robe",
-		DefaultFilename: "roba.xlsx",
+		DefaultFilename: fmt.Sprintf("roba-%s.xlsx", currentDate),
 		Filters: []runtime.FileFilter{
 			{DisplayName: "Excel (*.xlsx)", Pattern: "*.xlsx"},
-			{DisplayName: "CSV (*.csv)", Pattern: "*.csv"},
 		},
 	})
+
 	if err != nil {
 		return fmt.Errorf("export dialog: %w", err)
 	}
-	if path == "" {
-		return nil
+
+	if ".xlsx" != strings.ToLower(filepath.Ext(path)) {
+		return fmt.Errorf("invalid file extension")
 	}
 
-	var data []byte
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".csv":
-		data, err = article.GetExport(a.getRequest(), req)
-	default:
-		if !strings.HasSuffix(path, ".xlsx") {
-			path += ".xlsx"
-		}
-		data, err = article.GetExport(a.getRequest(), req)
-	}
+	data, err := article.GetExport(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
 		return err
@@ -129,4 +110,24 @@ func (a *WailsApp) ExportArticles(req ListArticlesRequest) error {
 	}
 
 	return nil
+}
+
+type SaveArticleConversionRequest = article.SaveConversionCommand
+
+func (a *WailsApp) SaveArticleConversion(req SaveArticleConversionRequest) (int64, error) {
+	res, err := article.SaveConversion(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+type DeleteArticleConversionRequest = article.DeleteConversionCommand
+
+func (a *WailsApp) DeleteArticleConversion(req DeleteArticleConversionRequest) error {
+	err := article.DeleteConversion(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return err
 }

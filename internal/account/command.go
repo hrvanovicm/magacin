@@ -3,6 +3,7 @@ package account
 import (
 	"fmt"
 	"hrvanovicm/magacin/infra/app"
+	"hrvanovicm/magacin/internal/activitylog"
 	"time"
 )
 
@@ -67,6 +68,14 @@ type SaveCommand struct {
 }
 
 func Save(r app.Request, cmd SaveCommand) (uint, error) {
+	var old *Account
+	if cmd.ID > 0 {
+		var existing Account
+		if err := r.DB.WithContext(r.Ctx).First(&existing, cmd.ID).Error; err == nil {
+			old = &existing
+		}
+	}
+
 	a := Account{
 		ID:       cmd.ID,
 		Username: cmd.Username,
@@ -80,10 +89,19 @@ func Save(r app.Request, cmd SaveCommand) (uint, error) {
 		}
 
 		a.PasswordHash = hash
+	} else if old != nil {
+		a.PasswordHash = old.PasswordHash
 	}
 
 	if err := r.DB.WithContext(r.Ctx).Save(&a).Error; err != nil {
 		return 0, err
+	}
+
+	cl := activitylog.NewLogger(r.User.ID, r.User.Username).ForStruct(r.Ctx, r.DB, int64(a.ID), Account{})
+	if old == nil {
+		cl.LogCreate()
+	} else {
+		cl.LogDiff(old, &a)
 	}
 
 	return a.ID, nil
@@ -119,6 +137,9 @@ func ChangePassword(r app.Request, cmd ChangePasswordCommand) error {
 		return err
 	}
 
+	cl := activitylog.NewLogger(r.User.ID, r.User.Username).ForStruct(r.Ctx, r.DB, int64(acc.ID), Account{})
+	cl.Log("Izmjena lozinke")
+
 	return nil
 }
 
@@ -127,9 +148,11 @@ type DeleteCommand struct {
 }
 
 func Delete(r app.Request, cmd DeleteCommand) error {
-	if err := r.DB.WithContext(r.Ctx).Delete(&Account{}, cmd.ID).Error; err != nil {
-		return err
+	err := r.DB.WithContext(r.Ctx).Delete(&Account{}, cmd.ID).Error
+	if err == nil {
+		cl := activitylog.NewLogger(r.User.ID, r.User.Username).ForStruct(r.Ctx, r.DB, int64(cmd.ID), Account{})
+		cl.LogDelete()
 	}
 
-	return nil
+	return err
 }

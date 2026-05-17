@@ -6,44 +6,44 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import {provideHttpClient, withInterceptors} from '@angular/common/http';
-import {provideRouter, RouterOutlet, Routes} from '@angular/router';
-import {authInterceptor} from './api/external/auth.interceptor';
-import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from '@angular/material/form-field';
-import {MAT_DATE_LOCALE, MatNativeDateModule} from '@angular/material/core';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideRouter, RouterOutlet, Routes } from '@angular/router';
+import { authInterceptor } from './api/external/auth.interceptor';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import localeBs from '@angular/common/locales/bs';
-import {registerLocaleData} from '@angular/common';
-import {MatDatepickerModule} from '@angular/material/datepicker';
-import {MAT_SNACK_BAR_DEFAULT_OPTIONS} from '@angular/material/snack-bar';
-import {MainLayout} from './shared/main.layout';
-import {GuestLayout} from './shared/guest.layout';
-import {ServerManagerService} from './core/server-manager.service';
-import {HasActiveServer} from './core/guards';
+import { registerLocaleData } from '@angular/common';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
+import { MainLayout } from './shared/main.layout';
+import { GuestLayout } from './shared/guest.layout';
+import { ServerManagerService } from './core/server-manager.service';
+import { HasActiveServer, HasRoleGuard, AdminGuard } from './core/guards';
 
 registerLocaleData(localeBs);
 
 export const APP_INFO = {
   name: 'Magacin',
-  version: '1.0.0',
+  version: '2.0.0-BETA',
 }
 
 export const routes: Routes = [
   {
     path: '',
     component: MainLayout,
-    canActivate: [HasActiveServer],
+    canActivate: [HasActiveServer, HasRoleGuard],
     children: [
-      {path: 'articles', loadChildren: () => import('./article/config').then(m => m.ARTICLE_ROUTES)},
-      {path: 'reports', loadChildren: () => import('./report/config').then(m => m.REPORT_ROUTES)},
-      {path: 'accounts', loadChildren: () => import('./accounts/config').then(m => m.ACCOUNT_ROUTES)},
-      {path: 'settings', loadChildren: () => import('./settings/config').then(m => m.SETTINGS_ROUTES)}
+      { path: 'articles', loadChildren: () => import('./article/config').then(m => m.ARTICLE_ROUTES) },
+      { path: 'reports', loadChildren: () => import('./report/config').then(m => m.REPORT_ROUTES) },
+      { path: 'accounts', loadChildren: () => import('./accounts/config').then(m => m.ACCOUNT_ROUTES), canActivate: [AdminGuard] },
+      { path: 'settings', loadChildren: () => import('./settings/config').then(m => m.SETTINGS_ROUTES), canActivate: [AdminGuard] }
     ],
   },
   {
     path: '',
     component: GuestLayout,
     children: [
-      {path: 'auth', loadChildren: () => import('./auth/config').then(m => m.AUTH_ROUTES)},
+      { path: 'auth', loadChildren: () => import('./auth/config').then(m => m.AUTH_ROUTES) },
     ]
   },
   {
@@ -56,7 +56,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     // Ng core
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({eventCoalescing: true}),
+    provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
 
@@ -79,8 +79,8 @@ export const appConfig: ApplicationConfig = {
       },
     },
 
-    {provide: LOCALE_ID, useValue: 'bs-BA'},
-    {provide: MAT_DATE_LOCALE, useValue: 'bs-BA'},
+    { provide: LOCALE_ID, useValue: 'bs-BA' },
+    { provide: MAT_DATE_LOCALE, useValue: 'bs-BA' },
   ],
 };
 

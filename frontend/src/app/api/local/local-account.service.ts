@@ -50,6 +50,6 @@ export class LocalAccountService implements AccountService {
   }
 
   async adminChangePassword(req: AccountAdminChangePasswordRequest): Promise<void> {
-    return; // TODO
+    return await wailsApp.ChangePasswordAccount(req);
   }
 }

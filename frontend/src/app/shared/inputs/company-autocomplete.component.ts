@@ -1,11 +1,11 @@
-import {Component, ElementRef, inject, Input, input, OnInit, ViewChild, signal} from '@angular/core';
-import {FormControl, ReactiveFormsModule} from '@angular/forms';
-import {MatChipsModule} from '@angular/material/chips';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatAutocompleteModule} from '@angular/material/autocomplete';
-import {Company} from '../../api';
-import {ServerManagerService} from '../../core/server-manager.service';
+import { Component, ElementRef, inject, Input, input, OnInit, ViewChild, signal } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { Company } from '../../api';
+import { ServerManagerService } from '../../core/server-manager.service';
 
 @Component({
   selector: 'app-company-autocomplete',
@@ -16,7 +16,7 @@ import {ServerManagerService} from '../../core/server-manager.service';
       <input #inputEl type="text" matInput [formControl]="control"
              [matAutocomplete]="auto" (input)="filter()" (focus)="load()" />
       <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
-        @for (option of filteredOptions(); track option.id) {
+        @for (option of options(); track option.id) {
           <mat-option [value]="option.name">
             {{ option.name }}
             @if (option.inHouseProduction) {
@@ -32,35 +32,35 @@ export class CompanyAutocompleteComponent implements OnInit {
   @ViewChild('inputEl') inputEl!: ElementRef<HTMLInputElement>;
 
   private readonly serverManager = inject(ServerManagerService);
+  private all: Company[] = [];
 
   readonly label = input.required<string>();
   @Input() control!: FormControl<Company | string | null>;
 
-  private allOptions: Company[] = [];
-  readonly filteredOptions = signal<Company[]>([]);
+  readonly options = signal<Company[]>([]);
 
   async ngOnInit(): Promise<void> {
     await this.load();
     const v = this.control.value;
     if (v && typeof v === 'string' && v.length > 0) {
-      this.control.setValue(this.resolveCompany(v));
+      this.control.setValue(this.resolve(v));
     }
     this.control.valueChanges.subscribe(val => {
       if (typeof val === 'string') {
-        this.control.setValue(this.resolveCompany(val), {emitEvent: false});
+        this.control.setValue(this.resolve(val), { emitEvent: false });
       }
     });
   }
 
   async load(): Promise<void> {
-    if (!this.allOptions.length) {
-      this.allOptions = await this.serverManager.activeServer()!.api.company.list({});
+    if (!this.all.length) {
+      this.all = await this.serverManager.activeServer()!.api.company.list({});
     }
     this.filter();
   }
 
-  private resolveCompany(name: string): Company {
-    const match = this.allOptions.find(o => o.name?.toLowerCase() === name.toLowerCase());
+  private resolve(name: string): Company {
+    const match = this.all.find(o => o.name?.toLowerCase() === name.toLowerCase());
     return Company.createFrom({
       name: match ? match.name : name.toLowerCase(),
       inHouseProduction: match?.inHouseProduction ?? false,
@@ -75,9 +75,7 @@ export class CompanyAutocompleteComponent implements OnInit {
   };
 
   filter(): void {
-    const query = this.inputEl?.nativeElement.value.toLowerCase() ?? '';
-    this.filteredOptions.set(
-      this.allOptions.filter(o => o.name?.toLowerCase().includes(query)),
-    );
+    const q = this.inputEl?.nativeElement.value.toLowerCase() ?? '';
+    this.options.set(this.all.filter(o => o.name?.toLowerCase().includes(q)));
   }
 }

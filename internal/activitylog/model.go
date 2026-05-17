@@ -2,6 +2,7 @@ package activitylog
 
 import (
 	"context"
+	"fmt"
 	"hrvanovicm/magacin/infra/app"
 	"hrvanovicm/magacin/infra/paged"
 	"time"
@@ -47,8 +48,10 @@ func NewLogger(actorID uint, actorUsername string) *Logger {
 }
 
 func (l *Logger) Log(ctx context.Context, db *gorm.DB, subjectID int64, subjectType, description string) {
-	if l == nil || l.actorID == 0 {
-		return
+	actorID := 0
+
+	if l == nil || l.actorID != 0 {
+		actorID = int(l.actorID)
 	}
 	if len(description) > 250 {
 		description = description[:250]
@@ -57,10 +60,12 @@ func (l *Logger) Log(ctx context.Context, db *gorm.DB, subjectID int64, subjectT
 		SubjectID:   subjectID,
 		SubjectType: subjectType,
 		Description: description,
-		ActorID:     l.actorID,
+		ActorID:     uint(actorID),
 	}
 
-	db.WithContext(ctx).Create(&entry)
+	if err := db.WithContext(ctx).Create(&entry).Error; err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (l *Logger) Username() string {
@@ -87,7 +92,7 @@ func GetLogsPaged(ctx context.Context, db *gorm.DB, qry GetLogsPagedQuery) (page
 		Table("main.activity_logs al").
 		Select("al.id, al.subject_id, al.subject_type, al.description, al.actor_id, al.created_at, COALESCE(a.username, 'Nepoznat') as actor_username").
 		Joins("LEFT JOIN main.accounts a ON a.id = al.actor_id").
-		Where("al.subject_id = ? AND al.subject_type = ?", qry.SubjectID, qry.SubjectType)
+		Where("al.subject_id = ? AND UPPER(al.subject_type) = UPPER(?)", qry.SubjectID, qry.SubjectType)
 
 	if qry.Search != nil && *qry.Search != "" {
 		base = base.Where("al.description LIKE ?", "%"+*qry.Search+"%")
@@ -124,7 +129,7 @@ func GetLogs(r app.Request, qry GetLogsQuery) ([]Entry, error) {
 		Table("main.activity_logs al").
 		Select("al.id, al.subject_id, al.subject_type, al.description, al.actor_id, al.created_at, COALESCE(a.username, 'Nepoznat') as actor_username").
 		Joins("LEFT JOIN main.accounts a ON a.id = al.actor_id").
-		Where("al.subject_id = ? AND al.subject_type = ?", qry.SubjectID, qry.SubjectType).
+		Where("al.subject_id = ? AND UPPER(al.subject_type) = UPPER(?)", qry.SubjectID, qry.SubjectType).
 		Order("al.created_at DESC").
 		Scan(&logs).Error
 	if err != nil {

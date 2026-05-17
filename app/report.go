@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -19,25 +20,21 @@ func (a *WailsApp) ListReportTypes() []report.Type {
 type ListReportsRequest = report.ListQuery
 
 func (a *WailsApp) ListReports(req ListReportsRequest) ([]report.Report, error) {
-	reports, err := report.List(a.getRequest(), req)
+	res, err := report.List(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return reports, err
 	}
-
-	return reports, nil
+	return res, err
 }
 
 type ListReportsPagedRequest = report.ListPagedQuery
 
 func (a *WailsApp) ListReportsPaged(req ListReportsPagedRequest) (paged.PagedResult[report.Report], error) {
-	reports, err := report.ListPaged(a.getRequest(), req)
+	res, err := report.ListPaged(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return reports, err
 	}
-
-	return reports, nil
+	return res, err
 }
 
 func (a *WailsApp) ListSignUsers() ([]string, error) {
@@ -50,72 +47,78 @@ func (a *WailsApp) ListSignUsers() ([]string, error) {
 }
 
 func (a *WailsApp) ListReportPublicLocations() ([]string, error) {
-	locations, err := report.ListPublishLocations(a.getRequest())
+	res, err := report.ListPublishLocations(a.getRequest())
 	if err != nil {
 		a.report(err)
-		return locations, err
 	}
-
-	return locations, nil
+	return res, err
 }
 
 func (a *WailsApp) GetNextReportCodeForType(reportType report.Type) (string, error) {
-	reportCode, err := report.GetNextReportCodeForType(a.getRequest(), reportType)
+	res, err := report.GetNextReportCodeForType(a.getRequest(), reportType)
 	if err != nil {
 		a.report(err)
-		return reportCode, err
 	}
-	return reportCode, nil
+	return res, err
+}
+
+type GetReportRequest = report.GetQuery
+
+func (a *WailsApp) GetReport(req GetReportRequest) (*report.Report, error) {
+	res, err := report.Get(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
 }
 
 type SaveReportRequest = report.SaveCommand
 
 func (a *WailsApp) SaveReport(req SaveReportRequest) (uint, error) {
-	repID, err := report.Save(a.getRequest(), req)
+	res, err := report.Save(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return 0, err
 	}
-
-	return repID, nil
+	return res, err
 }
 
 type DeleteReportRequest = report.DeleteCommand
 
 func (a *WailsApp) DeleteReport(req DeleteReportRequest) error {
-	if err := report.Delete(a.getRequest(), req); err != nil {
+	err := report.Delete(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
 	}
-
-	return nil
+	return err
 }
 
 type GetReportLogsRequest = report.GetLogsQuery
 
 func (a *WailsApp) GetReportLogs(req GetReportLogsRequest) ([]activitylog.Entry, error) {
-	logs, err := report.GetLogs(a.getRequest(), req)
+	res, err := report.GetLogs(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return nil, err
 	}
-	return logs, nil
+	return res, err
 }
 
 func (a *WailsApp) ExportReport(id int64) error {
-	path, err := runtime.SaveFileDialog(a.getRequest().Ctx, runtime.SaveDialogOptions{
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:           "Izvoz izvještaja",
 		DefaultFilename: fmt.Sprintf("izvjestaj-%d.xlsx", id),
 		Filters: []runtime.FileFilter{
 			{DisplayName: "Excel (*.xlsx)", Pattern: "*.xlsx"},
 		},
 	})
+
 	if err != nil {
 		return fmt.Errorf("export dialog: %w", err)
 	}
+
 	if path == "" {
 		return nil
 	}
+
 	if !strings.HasSuffix(path, ".xlsx") {
 		path += ".xlsx"
 	}
@@ -134,7 +137,7 @@ func (a *WailsApp) ExportReport(id int64) error {
 }
 
 func (a *WailsApp) ExportWorkOrder(id int64) error {
-	path, err := runtime.SaveFileDialog(a.getRequest().Ctx, runtime.SaveDialogOptions{
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:           "Izvoz radnog naloga",
 		DefaultFilename: fmt.Sprintf("radni-nalog-%d.xlsx", id),
 		Filters: []runtime.FileFilter{
@@ -166,9 +169,10 @@ func (a *WailsApp) ExportWorkOrder(id int64) error {
 }
 
 func (a *WailsApp) ExportReports(req ListReportsRequest) error {
-	path, err := runtime.SaveFileDialog(a.getRequest().Ctx, runtime.SaveDialogOptions{
+	currentDate := time.Now().Format("2006-01-02")
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
 		Title:           "Izvoz izvještaja",
-		DefaultFilename: "izvjestaji.xlsx",
+		DefaultFilename: fmt.Sprintf("izvjestaji-%s.xlsx", currentDate),
 		Filters: []runtime.FileFilter{
 			{DisplayName: "Excel (*.xlsx)", Pattern: "*.xlsx"},
 			{DisplayName: "CSV (*.csv)", Pattern: "*.csv"},

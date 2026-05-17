@@ -21,3 +21,25 @@ export const HasActiveServer: CanActivateFn = (route, state) => {
 
   return true;
 }
+
+export const HasRoleGuard: CanActivateFn = (route, state) => {
+  const router = inject(Router);
+  const serverManager = inject(ServerManagerService);
+
+  if (!serverManager.currentRole()) {
+    return router.navigate([AUTH_LINKS.signIn()]);
+  }
+
+  return true;
+}
+
+export const AdminGuard: CanActivateFn = (route, state) => {
+  const router = inject(Router);
+  const serverManager = inject(ServerManagerService);
+
+  if (!serverManager.isAdmin()) {
+    return router.navigate([AUTH_LINKS.signIn()]); // Or maybe some other page
+  }
+
+  return true;
+}

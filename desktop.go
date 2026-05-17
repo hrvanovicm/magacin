@@ -25,7 +25,7 @@ func main() {
 		DisableResize:     false,
 		Fullscreen:        false,
 		Frameless:         false,
-		StartHidden:       true,
+		StartHidden:       false,
 		HideWindowOnClose: false,
 		Assets:            assets,
 		OnStartup:         wailsApp.Startup,

@@ -9,6 +9,8 @@ import (
 	"gorm.io/gorm"
 
 	"hrvanovicm/magacin/internal/activitylog"
+	"hrvanovicm/magacin/internal/server"
+	"hrvanovicm/magacin/internal/um"
 )
 
 func ListCategories(r app.Request) []string {
@@ -24,7 +26,10 @@ type ListQuery struct {
 
 func List(r app.Request, qry ListQuery) ([]Article, error) {
 	query := r.DB.WithContext(r.Ctx).
-		Preload("UnitMeasure")
+		Preload("UnitMeasure").
+		Preload("Conversions").
+		Preload("Conversions.ToUnitMeasure").
+		Preload("Recipes.RawMaterial.UnitMeasure")
 
 	spec := Specification{
 		Search:       qry.Search,
@@ -34,12 +39,9 @@ func List(r app.Request, qry ListQuery) ([]Article, error) {
 	}
 	executeFilter(query, spec)
 
-	articles := []Article{}
-	if err := query.Find(&articles).Error; err != nil {
-		return nil, err
-	}
-
-	return articles, nil
+	articles := make([]Article, 0)
+	err := query.Find(&articles).Error
+	return articles, err
 }
 
 type ListPagedQuery struct {
@@ -64,13 +66,15 @@ func ListPaged(r app.Request, qry ListPagedQuery) (paged.PagedResult[Article], e
 		return paged.NewDefaultPagedResult[Article](), err
 	}
 
-	accounts := []Article{}
+	articles := make([]Article, 0)
 	err := query.
 		Preload("UnitMeasure").
+		Preload("Conversions").
+		Preload("Conversions.ToUnitMeasure").
 		Preload("Recipes.RawMaterial.UnitMeasure").
 		Limit(qry.Limit).
 		Offset(qry.Paged.Offset()).
-		Find(&accounts).
+		Find(&articles).
 		Error
 
 	if err != nil {
@@ -78,7 +82,7 @@ func ListPaged(r app.Request, qry ListPagedQuery) (paged.PagedResult[Article], e
 	}
 
 	res := paged.PagedResult[Article]{
-		Content: accounts,
+		Content: articles,
 		Total:   total,
 		Page:    qry.Page,
 		Limit:   qry.Limit,
@@ -96,6 +100,8 @@ func Get(r app.Request, qry GetQuery) (*Article, error) {
 
 	err := r.DB.WithContext(r.Ctx).
 		Preload("UnitMeasure").
+		Preload("Conversions").
+		Preload("Conversions.ToUnitMeasure").
 		Preload("Recipes.RawMaterial.UnitMeasure").
 		First(&acc, qry.ID).Error
 
@@ -125,10 +131,17 @@ func GetExport(r app.Request, qry GetExportQuery) ([]byte, error) {
 		return nil, fmt.Errorf("export: list failed: %w", err)
 	}
 
+	defaultName := ""
+	if cfg, err := server.GetLocalConfig(r); err == nil && cfg.CompanyName != "" {
+		defaultName = cfg.CompanyName
+	}
+
 	return export.GenerateXL("Roba", func(b *export.XLBuilder) {
+		b.WriteTitle("Izvještaji")
+		b.WriteRow(defaultName)
 		b.WriteHeader("Rb.", "Naziv", "Šifra", "Tip", "Oznake", "Na stanju", "Mjerna jedinica")
 		for i, rep := range articles {
-			b.WriteRow(i+1, deref(&rep.Name), deref(rep.Code), deref(&rep.Category), deref(&rep.Tags), rep.InStockAmount, rep.UnitMeasure.Name)
+			b.WriteRow(i+1, deref(&rep.Name), deref(rep.Code), categoryLabel(deref(&rep.Category)), deref(&rep.Tags), rep.InStockAmount, rep.UnitMeasure.Name)
 		}
 	})
 }
@@ -136,7 +149,7 @@ func GetExport(r app.Request, qry GetExportQuery) ([]byte, error) {
 func executeFilter(query *gorm.DB, spec Specification) {
 	if spec.Search != nil && *spec.Search != "" {
 		searchTerm := "%" + *spec.Search + "%"
-		query = query.Where("name LIKE ? OR code LIKE ?", searchTerm, searchTerm)
+		query = query.Where("(code LIKE ? OR name LIKE ? OR tags LIKE ?)", searchTerm, searchTerm, searchTerm)
 	}
 	if len(spec.Categories) > 0 {
 		query = query.Where("category IN ?", spec.Categories)
@@ -150,8 +163,29 @@ func executeFilter(query *gorm.DB, spec Specification) {
 }
 
 func deref(s *string) string {
-	if s == nil {
-		return ""
-	}
 	return *s
+}
+
+func GetConversionFactor(r app.Request, articleID int64, fromUM int64, toUM int64) (float32, error) {
+	if fromUM == toUM {
+		return 1.0, nil
+	}
+
+	var artConv Conversion
+	err := r.DB.WithContext(r.Ctx).
+		Where("article_id = ? AND from_unit_measure_id = ? AND to_unit_measure_id = ?", articleID, fromUM, toUM).
+		First(&artConv).Error
+	if err == nil {
+		return artConv.Factor, nil
+	}
+
+	var umConv um.Conversion
+	err = r.DB.WithContext(r.Ctx).
+		Where("from_unit_measure_id = ? AND to_unit_measure_id = ?", fromUM, toUM).
+		First(&umConv).Error
+	if err == nil {
+		return umConv.Factor, nil
+	}
+
+	return 0, fmt.Errorf("no conversion factor found between %d and %d", fromUM, toUM)
 }

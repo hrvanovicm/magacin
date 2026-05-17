@@ -4,49 +4,39 @@ import (
 	"fmt"
 	"hrvanovicm/magacin/infra/paged"
 	"hrvanovicm/magacin/internal/account"
-	"hrvanovicm/magacin/internal/article"
 )
 
 type SignInRequest = account.SignInCommand
 
 func (a *WailsApp) SignIn(req SignInRequest) (*account.SignInResult, error) {
 	result, err := account.SignIn(a.getRequest(), req)
-
 	if err != nil {
 		a.report(err)
-		return result, err
+	} else {
+		a.currentActorID = result.Account.ID
+		a.currentActorUsername = result.Account.Username
 	}
-
-	a.currentActorID = result.Account.ID
-	a.currentActorUsername = result.Account.Username
-
-	return result, nil
+	return result, err
 }
 
 type ListAccountsRequest = account.ListQuery
 
 func (a *WailsApp) ListAccounts(req ListAccountsRequest) ([]account.Account, error) {
-	accounts, err := account.List(a.getRequest(), req)
-
+	res, err := account.List(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return accounts, err
 	}
-
-	return accounts, nil
+	return res, err
 }
 
-type ListAccountsPagedRequest = article.ListPagedQuery
+type ListAccountsPagedRequest = account.ListPagedQuery
 
-func (a *WailsApp) ListAccountsPaged(req ListAccountsPagedRequest) (paged.PagedResult[article.Article], error) {
-	articles, err := article.ListPaged(a.getRequest(), req)
-
+func (a *WailsApp) ListAccountsPaged(req ListAccountsPagedRequest) (paged.PagedResult[account.Account], error) {
+	res, err := account.ListPaged(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return articles, err
 	}
-
-	return articles, nil
+	return res, err
 }
 
 type GetAccountRequest = account.GetQuery

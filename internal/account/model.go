@@ -13,10 +13,10 @@ type Specification struct {
 
 type Account struct {
 	ID            uint    `gorm:"column:id;primaryKey" json:"id"`
-	Username      string  `gorm:"column:username" json:"username"`
+	Username      string  `gorm:"column:username" json:"username" log:"korisničkog imena"`
 	PasswordHash  string  `gorm:"column:password_hash" json:"-"`
-	ServerAddress *string `gorm:"column:server_address" json:"server_address"`
-	Role          *string `gorm:"column:role" json:"role"`
+	ServerAddress *string `gorm:"column:server_address" json:"server_address" log:"adrese servera"`
+	Role          *string `gorm:"column:role" json:"role" log:"uloge"`
 }
 
 func (Account) TableName() string {

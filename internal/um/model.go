@@ -7,7 +7,7 @@ type Specification struct {
 
 type UnitMeasure struct {
 	ID   uint   `gorm:"column:id;primaryKey" json:"id"`
-	Name string `gorm:"column:name" json:"name"`
+	Name string `gorm:"column:name" json:"name" log:"naziva"`
 }
 
 func (UnitMeasure) TableName() string {

@@ -12,7 +12,7 @@ func NewDefaultPagedResult[T any]() PagedResult[T] {
 		Content: []T{},
 		Total:   0,
 		Page:    1,
-		Limit:   30,
+		Limit:   100,
 	}
 }
 

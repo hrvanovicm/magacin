@@ -1,16 +1,16 @@
-import {Component, EventEmitter, Output} from '@angular/core';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatSort, MatSortHeader} from '@angular/material/sort';
-import {MatIconModule} from '@angular/material/icon';
-import {MatIconButton} from '@angular/material/button';
-import {DatePipe} from '@angular/common';
-import {PagedTableBase} from '../../shared/page/paged-table.base';
-import {Report, ReportType} from '../../api';
+import { Component, EventEmitter, Output } from '@angular/core';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { DatePipe } from '@angular/common';
+import { PagedTableBase } from '../../shared/page/paged-table.base';
+import { Report, ReportType } from '../../api';
 
 @Component({
   selector: 'app-report-table',
-  providers: [{provide: PagedTableBase, useExisting: ReportTableComponent}],
-  imports: [MatTableModule, MatSort, MatSortHeader, MatIconModule, MatIconButton, DatePipe],
+  providers: [{ provide: PagedTableBase, useExisting: ReportTableComponent }],
+  imports: [MatTableModule, MatSort, MatSortHeader, MatIconModule, DatePipe],
   template: `
     <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort
            (matSortChange)="sorted.emit($event)">
@@ -70,37 +70,22 @@ import {Report, ReportType} from '../../api';
         <td mat-cell *matCellDef="let row">{{ row.signedBy }}</td>
       </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let row" class="text-right">
-          <button matIconButton (click)="onDeleteClick(row, $event)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
       <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
       <tr mat-row *matRowDef="let row; columns: columns" (click)="rowClick.emit(row)"></tr>
     </table>
   `,
   styles: `
-    :host { @apply flex flex-col h-full w-full overflow-hidden; }
+    :host { @apply flex flex-col h-full w-full overflow-y-scroll; }
     tr { cursor: pointer !important; }
     tr:hover { background: whitesmoke !important; }
   `,
 })
 export class ReportTableComponent extends PagedTableBase {
   @Output() rowClick = new EventEmitter<Report>();
-  @Output() deleteClick = new EventEmitter<Report>();
 
-  protected readonly columns = ['position', 'type', 'code', 'company', 'signedAt', 'signedAtLocation', 'signedBy', 'actions'];
+  protected readonly columns = ['position', 'type', 'code', 'company', 'signedAt', 'signedAtLocation', 'signedBy'];
   protected readonly dataSource = new MatTableDataSource<Report>([]);
   protected readonly ReportType = ReportType;
-
-  onDeleteClick(row: Report, event: MouseEvent) {
-    event.stopPropagation();
-    this.deleteClick.emit(row);
-  }
 
   setData(data: Report[]): void {
     this.dataSource.data = data;

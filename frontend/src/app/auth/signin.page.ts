@@ -1,19 +1,19 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
-import {MatCardModule} from '@angular/material/card';
-import {MatTabsModule} from '@angular/material/tabs';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatInputModule} from '@angular/material/input';
-import {MatListModule} from '@angular/material/list';
-import {MatIconModule} from '@angular/material/icon';
-import {MatButton, MatIconButton} from '@angular/material/button';
-import {MatDivider} from '@angular/material/divider';
-import {MatProgressBarModule} from '@angular/material/progress-bar';
-import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
-import {MatTooltipModule} from '@angular/material/tooltip';
-import {AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators} from '@angular/forms';
-import {Router} from '@angular/router';
-import {ServerManagerService} from '../core/server-manager.service';
-import {server} from '../../../wailsjs/go/models';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatDivider } from '@angular/material/divider';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ServerManagerService } from '../core/server-manager.service';
+import { server } from '../../../wailsjs/go/models';
 import {
   HasAdminAccounts,
   ListServers,
@@ -21,16 +21,21 @@ import {
   ScanAndSaveServers,
   SignIn,
   UpsertServerLastUsed,
+  SaveServer,
+  DeleteServer,
 } from '../../../wailsjs/go/app/WailsApp';
-import {ExternalApiFactory} from '../api/external/external-api';
-import {ARTICLE_LINKS} from '../article/config';
+import { ExternalApiFactory } from '../api/external/external-api';
+import { ARTICLE_LINKS } from '../article/config';
+import {MatDialog} from '@angular/material/dialog';
+import {AddServerDialogComponent} from './add-server.dialog';
+import Server = server.Server;
 
 type LocalMode = 'loading' | 'register' | 'login';
 
 function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const pw = control.get('password')?.value;
   const confirm = control.get('confirmPassword')?.value;
-  return pw && confirm && pw !== confirm ? {passwordMismatch: true} : null;
+  return pw && confirm && pw !== confirm ? { passwordMismatch: true } : null;
 }
 
 @Component({
@@ -140,7 +145,10 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                             </span>
                           </span>
                           <span matListItemLine class="text-gray-500">{{ s.address }}</span>
-                          <div matListItemMeta>
+                          <div matListItemMeta class="flex gap-2">
+                            <button matIconButton color="warn" (click)="deleteServer(s)" matTooltip="Obriši server">
+                              <mat-icon>delete</mat-icon>
+                            </button>
                             <button matButton
                               [disabled]="!onlineStatus()[s.address]"
                               (click)="selectExternalServer(s)">
@@ -155,10 +163,16 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                   }
 
                   <div class="p-4 flex items-center gap-3">
-                    <button matButton (click)="scanNetwork()" [disabled]="scanning()">
-                      <mat-icon>wifi_find</mat-icon>
-                      Skeniraj mrežu
-                    </button>
+                    <div class="flex flex-row gap-2">
+                      <button matButton (click)="scanNetwork()" [disabled]="scanning()">
+                        <mat-icon>wifi_find</mat-icon>
+                        Skeniraj mrežu
+                      </button>
+                      <button matButton (click)="addServer()">
+                        <mat-icon>add</mat-icon>
+                        Dodaj server
+                      </button>
+                    </div>
                     @if (scanning()) {
                       <span class="text-sm text-gray-400 animate-pulse">Skeniranje u toku...</span>
                     }
@@ -224,6 +238,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   `,
 })
 export class SigninPage implements OnInit {
+  readonly dialog = inject(MatDialog);
   readonly router = inject(Router);
   readonly serverManager = inject(ServerManagerService);
   private readonly apiFactory = inject(ExternalApiFactory);
@@ -241,7 +256,7 @@ export class SigninPage implements OnInit {
     username: new FormControl('', Validators.required),
     password: new FormControl('', Validators.required),
     confirmPassword: new FormControl('', Validators.required),
-  }, {validators: passwordMatchValidator});
+  }, { validators: passwordMatchValidator });
 
   readonly scanning = signal(false);
   readonly scanRun = signal(false);
@@ -267,6 +282,45 @@ export class SigninPage implements OnInit {
     }
   }
 
+  addServer() {
+    const dialogRef = this.dialog.open(AddServerDialogComponent, {
+      width: '400px',
+      maxWidth: '95wh',
+    });
+    dialogRef.afterClosed().subscribe(async result => {
+      if (!result) {
+        return;
+      }
+
+      try {
+        let serverObj = Server.createFrom({
+          id: 0,
+          name: result.name,
+          address: result.address
+        });
+        const savedId = await SaveServer(serverObj);
+        serverObj.id = savedId;
+        let servers = this.storedServers();
+        servers.push(serverObj);
+        
+        this.storedServers.set(servers);
+        this.checkAllOnline([serverObj]);
+      } catch (err) {
+        console.error('Failed to save server', err);
+      }
+    })
+  }
+
+  async deleteServer(s: server.Server) {
+    if (!s.id) return;
+    try {
+      await DeleteServer(s.id);
+      this.storedServers.set(this.storedServers().filter(svr => svr.id !== s.id));
+    } catch (err) {
+      console.error('Failed to delete server', err);
+    }
+  }
+
   private checkAllOnline(servers: server.Server[]) {
     for (const s of servers) {
       this.checkOnline(s.address);
@@ -275,20 +329,20 @@ export class SigninPage implements OnInit {
 
   private async checkOnline(address: string) {
     try {
-      await fetch(`${address}/api/health`, {method: 'HEAD', signal: AbortSignal.timeout(3000)});
-      this.onlineStatus.update(s => ({...s, [address]: true}));
+      await fetch(`${address}/api/health`, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+      this.onlineStatus.update(s => ({ ...s, [address]: true }));
     } catch {
-      this.onlineStatus.update(s => ({...s, [address]: false}));
+      this.onlineStatus.update(s => ({ ...s, [address]: false }));
     }
   }
 
   async localLogin() {
     if (!this.loginForm.valid) return;
-    const {username, password} = this.loginForm.getRawValue();
+    const { username, password } = this.loginForm.getRawValue();
     this.localLoading.set(true);
     this.localError.set(null);
     try {
-      const result = await SignIn({username: username!, password: password!});
+      const result = await SignIn({ username: username!, password: password! });
       this.serverManager.setLocalServer(result.Token, result.Account.username, result.Account.role);
       this.router.navigate([ARTICLE_LINKS.index()]);
     } catch (e: any) {
@@ -300,12 +354,12 @@ export class SigninPage implements OnInit {
 
   async register() {
     if (!this.registerForm.valid || this.registerForm.hasError('passwordMismatch')) return;
-    const {username, password} = this.registerForm.getRawValue();
+    const { username, password } = this.registerForm.getRawValue();
     this.localLoading.set(true);
     this.localError.set(null);
     try {
-      await RegisterFirstAdmin({id: 0, username: username!, password: password ?? undefined, role: undefined});
-      const result = await SignIn({username: username!, password: password!});
+      await RegisterFirstAdmin({ id: 0, username: username!, password: password ?? undefined, role: undefined });
+      const result = await SignIn({ username: username!, password: password! });
       this.serverManager.setLocalServer(result.Token, result.Account.username, result.Account.role);
       this.router.navigate([ARTICLE_LINKS.index()]);
     } catch (e: any) {
@@ -332,30 +386,30 @@ export class SigninPage implements OnInit {
   selectExternalServer(s: server.Server) {
     this.externalLoginTarget.set(s);
     this.externalError.set(null);
-    this.externalLoginForm.reset({username: s.lastUsedUsername ?? '', password: ''});
+    this.externalLoginForm.reset({ username: s.lastUsedUsername ?? '', password: '' });
   }
 
   async externalLogin() {
     const target = this.externalLoginTarget();
     if (!target || !this.externalLoginForm.valid) return;
 
-    const {username, password} = this.externalLoginForm.getRawValue();
+    const { username, password } = this.externalLoginForm.getRawValue();
     this.externalLoading.set(true);
     this.externalError.set(null);
 
     try {
       const res = await fetch(`${target.address}/api/auth/sign-in`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, password}),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({error: res.statusText}));
+        const err = await res.json().catch(() => ({ error: res.statusText }));
         throw new Error(err.error ?? res.statusText);
       }
 
-      const signInResult: {Account: any; Token: string} = await res.json();
+      const signInResult: { Account: any; Token: string } = await res.json();
       const api = this.apiFactory.create(target.address);
 
       this.serverManager.setActiveServer({
@@ -367,10 +421,10 @@ export class SigninPage implements OnInit {
       }, signInResult.Account?.username ?? '', signInResult.Account?.role ?? null);
 
       await UpsertServerLastUsed({
-        ServerName: target.name, 
-        ServerAddress: target.address, 
+        ServerName: target.name,
+        ServerAddress: target.address,
         Username: username!
-      }).catch(() => {});
+      }).catch(() => { });
 
       this.router.navigate([ARTICLE_LINKS.index()]);
     } catch (e: any) {

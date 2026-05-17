@@ -3,15 +3,19 @@ package app
 import (
 	"context"
 	"errors"
+	"hrvanovicm/magacin/api"
 	"hrvanovicm/magacin/infra/app"
 	"hrvanovicm/magacin/infra/db"
 	"hrvanovicm/magacin/internal/ws"
 	"hrvanovicm/magacin/migrations"
 	"log"
+	"net/http"
 
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"go.uber.org/zap"
@@ -99,14 +103,14 @@ func (a *WailsApp) Startup(ctx context.Context) {
 	a.gormDB = gormDB
 
 	a.hub = ws.NewHub()
-	// handler := api.NewHandler(a.gormDB, a.hub)
-	// router := handler.SetupRouter()
-	// srv := &http.Server{Addr: ":8080", Handler: router}
-	// go func() {
-	// 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-	// 		a.report(err)
-	// 	}
-	// }()
+	handler := api.NewHandler(a.gormDB, a.hub)
+	router := handler.SetupRouter()
+	srv := &http.Server{Addr: ":8080", Handler: router}
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			a.report(err)
+		}
+	}()
 }
 
 func (a *WailsApp) Shutdown(ctx context.Context) {
@@ -163,6 +167,10 @@ func (a *WailsApp) getRequest() app.Request {
 	return app.Request{
 		DB:  a.gormDB,
 		Ctx: context.Background(),
+		User: app.User{
+			ID:       a.currentActorID,
+			Username: a.currentActorUsername,
+		},
 	}
 }
 
@@ -176,4 +184,18 @@ func getStorageDir() string {
 		panic(err)
 	}
 	return dir
+}
+
+func (a *WailsApp) SaveFile(filename string, data []byte) error {
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Spremi datoteku",
+		DefaultFilename: filename,
+	})
+	if err != nil {
+		return err
+	}
+	if path == "" {
+		return nil
+	}
+	return os.WriteFile(path, data, 0644)
 }

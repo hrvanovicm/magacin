@@ -38,4 +38,4 @@ CREATE TABLE main.server_config
     is_public BOOLEAN DEFAULT FALSE
 );
 
-INSERT INTO main.server_config(name, is_public) VALUES ('Lokalni server', false);
+INSERT INTO main.server_config(name, is_public) VALUES ('Magacin', false);

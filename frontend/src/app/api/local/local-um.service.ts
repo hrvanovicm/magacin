@@ -19,4 +19,16 @@ export class LocalUmService implements UmService {
   async delete(req: UmDeleteRequest): Promise<void> {
     return await wailsApp.DeleteUnitMeasure(req);
   }
+
+  async listConversions(req: any): Promise<any[]> {
+    return await wailsApp.ListUnitMeasureConversions(req);
+  }
+
+  async saveConversion(req: any): Promise<number> {
+    return await wailsApp.SaveUnitMeasureConversion(req);
+  }
+
+  async deleteConversion(req: any): Promise<void> {
+    return await wailsApp.DeleteUnitMeasureConversion(req);
+  }
 }

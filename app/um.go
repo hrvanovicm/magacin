@@ -7,34 +7,59 @@ import (
 type ListUnitMeasurementsRequest = um.ListQuery
 
 func (a *WailsApp) ListUnitMeasurements(req ListUnitMeasurementsRequest) ([]um.UnitMeasure, error) {
-	unitMeasures, err := um.List(a.getRequest(), req)
+	res, err := um.List(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return unitMeasures, err
 	}
-
-	return unitMeasures, nil
+	return res, err
 }
 
 type SaveUnitMeasureRequest = um.SaveCommand
 
 func (a *WailsApp) SaveUnitMeasure(req SaveUnitMeasureRequest) (uint, error) {
-	umID, err := um.Save(a.getRequest(), req)
+	res, err := um.Save(a.getRequest(), req)
 	if err != nil {
 		a.report(err)
-		return 0, err
 	}
-
-	return umID, nil
+	return res, err
 }
 
 type DeleteUnitMeasureRequest = um.DeleteCommand
 
 func (a *WailsApp) DeleteUnitMeasure(req DeleteUnitMeasureRequest) error {
-	if err := um.Delete(a.getRequest(), req); err != nil {
+	err := um.Delete(a.getRequest(), req)
+	if err != nil {
 		a.report(err)
-		return err
 	}
+	return err
+}
 
-	return nil
+type SaveUnitMeasureConversionRequest = um.SaveConversionCommand
+
+func (a *WailsApp) SaveUnitMeasureConversion(req SaveUnitMeasureConversionRequest) (int64, error) {
+	res, err := um.SaveConversion(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+type DeleteUnitMeasureConversionRequest = um.DeleteConversionCommand
+
+func (a *WailsApp) DeleteUnitMeasureConversion(req DeleteUnitMeasureConversionRequest) error {
+	err := um.DeleteConversion(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return err
+}
+
+type ListUnitMeasureConversionsRequest = um.ListConversionsQuery
+
+func (a *WailsApp) ListUnitMeasureConversions(req ListUnitMeasureConversionsRequest) ([]um.Conversion, error) {
+	res, err := um.ListConversions(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
 }

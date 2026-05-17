@@ -20,11 +20,10 @@ func Get(r app.Request, qry GetQuery) (*Note, error) {
 		First(&n).
 		Error
 
-	if !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
-	}
-
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

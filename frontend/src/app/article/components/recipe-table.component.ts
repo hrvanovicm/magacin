@@ -1,11 +1,14 @@
-import {Component, EventEmitter, Input, Output} from '@angular/core';
-import {MatTableDataSource, MatTableModule} from '@angular/material/table';
-import {MatIconModule} from '@angular/material/icon';
-import {MatButtonModule} from '@angular/material/button';
-import {AmountInputComponent} from '../../shared/inputs';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { AmountInputComponent } from '../../shared/inputs';
+import { article } from '../../../../wailsjs/go/models';
+
+import Article = article.Article;
 
 export interface RecipeLike {
-  rawMaterial: { name: string; unitMeasure?: any; id: number };
+  rawMaterial: Article;
   amount: number;
 }
 
@@ -18,7 +21,7 @@ export interface RecipeAmountChange {
   selector: 'app-recipe-table',
   imports: [MatTableModule, MatIconModule, MatButtonModule, AmountInputComponent],
   template: `
-    <table mat-table class="mat-elevation-z8 mt-2 w-full" [dataSource]="dataSource">
+    <table mat-table class="mat-elevation-z8 mt-2 w-full" [dataSource]="dataSource" [trackBy]="trackByIndex">
       <ng-container matColumnDef="position">
         <th mat-header-cell *matHeaderCellDef>Rb.</th>
         <td mat-cell *matCellDef="let i = index">{{ i + 1 }}.</td>
@@ -34,8 +37,9 @@ export interface RecipeAmountChange {
                             [compact]="true"
                             [initValue]="row.amount"
                             [unitMeasure]="row.rawMaterial.unitMeasure"
+                            [conversions]="row.rawMaterial.conversions || []"
                             (onValueChange)="amountChange.emit({recipe: row, amount: $event})"
-                            (click)="$event.preventDefault()"/>
+                            (click)="$event.stopPropagation()"/>
         </td>
       </ng-container>
       <ng-container matColumnDef="actions">
@@ -51,7 +55,7 @@ export interface RecipeAmountChange {
     </table>
   `,
 })
-class RecipeTableComponent {
+export class RecipeTableComponent {
   protected readonly cols = ['position', 'name', 'amount', 'actions'];
   protected readonly dataSource = new MatTableDataSource<RecipeLike>([]);
 
@@ -61,6 +65,8 @@ class RecipeTableComponent {
 
   @Output() amountChange = new EventEmitter<RecipeAmountChange>();
   @Output() remove = new EventEmitter<RecipeLike>();
-}
 
-export default RecipeTableComponent
+  trackByIndex(index: number) {
+    return index;
+  }
+}

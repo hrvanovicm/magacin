@@ -1,10 +1,10 @@
-import {Component, inject, input, OnInit, signal} from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import {DatePipe} from '@angular/common';
-import {ServerManagerService} from '../core/server-manager.service';
+import { Component, inject, input, signal, effect, untracked } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ServerManagerService } from '../core/server-manager.service';
 
 @Component({
   selector: 'app-note-tab',
@@ -27,7 +27,7 @@ import {ServerManagerService} from '../core/server-manager.service';
   `,
   styles: `:host { @apply flex flex-col h-full overflow-hidden; }`,
 })
-export class NoteTabComponent implements OnInit {
+export class NoteTabComponent {
   readonly subjectType = input.required<string>();
   readonly subjectId = input.required<number>();
 
@@ -37,8 +37,19 @@ export class NoteTabComponent implements OnInit {
   content = '';
   readonly updatedAt = signal<string | null>(null);
 
-  async ngOnInit() {
-    if (!this.subjectId()) return;
+  constructor() {
+    effect(() => {
+      const id = this.subjectId();
+      if (id) {
+        untracked(() => this.load());
+      } else {
+        this.content = '';
+        this.updatedAt.set(null);
+      }
+    });
+  }
+
+  async load() {
     try {
       const note = await this.serverManager.activeServer()!.api.notes.get({
         SubjectType: this.subjectType(),
@@ -46,19 +57,23 @@ export class NoteTabComponent implements OnInit {
       });
       this.content = note?.content ?? '';
       this.updatedAt.set(note?.updatedAt ?? null);
-    } catch {}
+    } catch {
+      this.content = '';
+      this.updatedAt.set(null);
+    }
   }
 
   async save() {
+    if (!this.subjectId()) return;
     try {
       await this.serverManager.activeServer()!.api.notes.save({
         subjectType: this.subjectType(),
         subjectId: this.subjectId(),
         content: this.content,
       });
-      this.updatedAt.set(new Date().toISOString());
-    } catch (error) {
-      this.snackbar.open(`❌ Greška pri čuvanju bilješke: ${error}`);
+      await this.load();
+    } catch (e) {
+      this.snackbar.open(`❌ Greška pri čuvanju bilješke: ${e}`);
     }
   }
 }

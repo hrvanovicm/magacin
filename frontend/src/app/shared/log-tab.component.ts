@@ -1,35 +1,25 @@
-import {Component, inject, input, OnInit, signal} from '@angular/core';
-import {FormsModule} from '@angular/forms';
-import {DatePipe} from '@angular/common';
-import {MatInputModule} from '@angular/material/input';
-import {MatFormFieldModule} from '@angular/material/form-field';
-import {MatIconModule} from '@angular/material/icon';
-import {MatButtonModule} from '@angular/material/button';
-import {MatListModule} from '@angular/material/list';
-import {MatPaginatorModule, PageEvent} from '@angular/material/paginator';
-import {ServerManagerService} from '../core/server-manager.service';
-import {ActivityLog} from '../api';
+import { Component, inject, input, signal, effect, untracked } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatListModule } from '@angular/material/list';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { ServerManagerService } from '../core/server-manager.service';
+import { ActivityLog } from '../api';
 
 @Component({
   selector: 'app-log-tab',
-  imports: [
-    FormsModule,
-    DatePipe,
-    MatInputModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatButtonModule,
-    MatListModule,
-    MatPaginatorModule,
-  ],
+  imports: [FormsModule, DatePipe, MatInputModule, MatFormFieldModule, MatIconModule, MatButtonModule, MatListModule, MatPaginatorModule],
   template: `
     <div class="flex flex-col h-full overflow-hidden">
-
       <div class="p-3 border-b shrink-0">
         <mat-form-field class="w-full">
           <mat-label>Pretraga</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [(ngModel)]="search" (ngModelChange)="onSearchChange()" placeholder="Filtriraj logove..." />
+          <input matInput [(ngModel)]="search" (ngModelChange)="onSearch()" placeholder="Filtriraj logove..." />
           @if (search) {
             <button matIconButton matSuffix (click)="clearSearch()">
               <mat-icon>close</mat-icon>
@@ -68,16 +58,16 @@ import {ActivityLog} from '../api';
           (page)="onPage($event)"
           showFirstLastButtons />
       </div>
-
     </div>
   `,
   styles: `:host { @apply flex flex-col h-full overflow-hidden; }`,
 })
-export class LogTabComponent implements OnInit {
+export class LogTabComponent {
   readonly subjectType = input.required<string>();
   readonly subjectId = input.required<number>();
 
   private readonly serverManager = inject(ServerManagerService);
+  private debounce: ReturnType<typeof setTimeout> | null = null;
 
   readonly logs = signal<ActivityLog[]>([]);
   readonly total = signal(0);
@@ -86,10 +76,12 @@ export class LogTabComponent implements OnInit {
   readonly pageSize = 10;
 
   search = '';
-  private searchDebounce: ReturnType<typeof setTimeout> | null = null;
 
-  async ngOnInit() {
-    if (this.subjectId()) await this.load();
+  constructor() {
+    effect(() => {
+      const id = this.subjectId();
+      if (id) untracked(() => this.load());
+    });
   }
 
   async load() {
@@ -109,9 +101,9 @@ export class LogTabComponent implements OnInit {
     }
   }
 
-  onSearchChange() {
-    if (this.searchDebounce) clearTimeout(this.searchDebounce);
-    this.searchDebounce = setTimeout(() => {
+  onSearch() {
+    if (this.debounce) clearTimeout(this.debounce);
+    this.debounce = setTimeout(() => {
       this.page.set(1);
       this.load();
     }, 300);

@@ -12,7 +12,7 @@ import {Sort} from '@angular/material/sort';
 import {PagedTableBase} from './paged-table.base';
 import {ActivatedRoute, Router} from '@angular/router';
 
-const defaultPageSizes = [5, 30, 100, 500, 1000];
+const defaultPageSizes = [100, 500, 1000];
 
 type LoadState = 'idle' | 'loading' | 'empty' | 'error';
 
@@ -73,13 +73,17 @@ export function bsPaginatorIntl(): MatPaginatorIntl {
             </button>
           }
           @if (exportClickCallback.observers.length > 0) {
-            <button matButton (click)="exportClickCallback.emit($event)">
+            <button matButton (click)="exportClickCallback.emit(req())">
               Preuzmi <mat-icon>download</mat-icon>
             </button>
           }
         </div>
       </mat-toolbar-row>
     </mat-toolbar>
+
+    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50/50 empty:hidden">
+      <ng-content select="[filters]"/>
+    </div>
 
     <mat-progress-bar mode="indeterminate" [class.invisible]="state() !== 'loading'"/>
 
@@ -142,9 +146,9 @@ export class PagedPage implements AfterContentInit {
 
   @ContentChild(PagedTableBase) tableChild!: PagedTableBase;
 
-  req = signal<any>({page: 1, limit: 5, order_by: 'id DESC'});
+  req = signal<any>({page: 1, limit: 100, order_by: 'id DESC'});
 
-  data: api.Paged<any> = {page: 1, content: [], limit: 5, total: 0};
+  data: api.Paged<any> = {page: 1, content: [], limit: 100, total: 0};
 
   state = signal<LoadState>('idle');
   private loadingTimer: ReturnType<typeof setTimeout> | null = null;

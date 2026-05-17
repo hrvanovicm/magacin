@@ -74,6 +74,8 @@ export interface ArticleService {
   export(req: Partial<ArticleExportRequest>): Promise<void>;
   getLogs(req: ActivityLogGetRequest): Promise<ActivityLog[]>;
   getAnalytics(req: ArticleAnalyticsRequest): Promise<ArticleAnalyticsResult[]>;
+  saveConversion(req: any): Promise<number>;
+  deleteConversion(req: any): Promise<void>;
 }
 
 
@@ -128,6 +130,7 @@ export type ReportListPagedRequest = ReportListRequest & {
 };
 
 export type ReportSaveRequest = Report;
+export type ReportGetRequest = { ID: number };
 export type ReportDeleteRequest = { ID: number };
 export type ReportExportRequest = ReportListRequest;
 export type ReportExportWorkOrderRequest = { ID: number };
@@ -137,6 +140,7 @@ export interface ReportService {
   listTypes(): Promise<ReportType[]>;
   list(req: ReportListRequest): Promise<Report[]>;
   listPaged(req: ReportListPagedRequest): Promise<Paged<Report>>;
+  get(req: ReportGetRequest): Promise<Report | undefined>;
   listSignUsers(): Promise<string[]>;
   listPublicLocations(): Promise<string[]>;
   getNextCode(type: ReportType): Promise<string>;
@@ -197,6 +201,9 @@ export interface UmService {
   list(req: UmListRequest): Promise<UnitMeasure[]>;
   save(req: UmSaveRequest): Promise<number>;
   delete(req: UmDeleteRequest): Promise<void>;
+  listConversions(req: any): Promise<any[]>;
+  saveConversion(req: any): Promise<number>;
+  deleteConversion(req: any): Promise<void>;
 }
 
 

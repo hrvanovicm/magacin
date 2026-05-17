@@ -22,11 +22,8 @@ func List(r app.Request, qry ListQuery) ([]Company, error) {
 	executeFilter(query, spec)
 
 	companies := make([]Company, 0)
-	if err := query.Find(&companies).Error; err != nil {
-		return nil, err
-	}
-
-	return companies, nil
+	err := query.Find(&companies).Error
+	return companies, err
 }
 
 type GetQuery struct {
