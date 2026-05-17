@@ -1,5 +1,7 @@
 # Magacin
 
+[![Wails Build CI](https://github.com/hrvanovicm/magacin/actions/workflows/wails-build.yml/badge.svg)](https://github.com/hrvanovicm/magacin/actions/workflows/wails-build.yml)
+
 A lightweight, efficient warehouse management application built with Go and Wails. Designed to operate seamlessly across different network environment.
 
 ---
