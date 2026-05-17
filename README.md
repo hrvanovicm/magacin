@@ -46,6 +46,15 @@ A lightweight, efficient warehouse management application built with Go and Wail
 
 ---
 
+## 🎯 Next goals
+
+1. **Spring clean** – Code refactoring, cleanups, and architectural improvements.
+2. **End to End API encryption** – Complete secure communication between frontend client and backend service.
+3. **Bug fixes** – Standard maintenance, resolving outstanding compilation and runtime issues.
+4. **Better xlsx templates** – Enhancing spreadsheet exports with cleaner designs and templates.
+
+---
+
 ## ⚙️ Contribute
 
 ### Clone
