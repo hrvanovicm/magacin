@@ -2,84 +2,68 @@ import {
   ApplicationConfig,
   Component,
   importProvidersFrom,
-  inject,
   LOCALE_ID,
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
-  signal,
 } from '@angular/core';
-import { provideRouter, RouterLink, RouterOutlet, Routes } from '@angular/router';
-import { ProductIndexPage } from './article/article.page';
-import { ArticleService } from './article/article.service';
-import { UnitMeasureService } from './unit-measure/unit-measure.service';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideRouter, RouterOutlet, Routes } from '@angular/router';
+import { authInterceptor } from './api/external/auth.interceptor';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { ReportIndexPage } from './report/report.page';
-import { ReportService } from './report/report.service';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import localeBs from '@angular/common/locales/bs';
 import { registerLocaleData } from '@angular/common';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatToolbar } from '@angular/material/toolbar';
-import { MatButton } from '@angular/material/button';
-import { MatDivider } from '@angular/material/divider';
-import { MatDialog } from '@angular/material/dialog';
-import { UnitMeasureIndexDialog } from './unit-measure/index.dialog';
 import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
+import { MainLayout } from './shared/main.layout';
+import { GuestLayout } from './shared/guest.layout';
+import { ServerManagerService } from './core/server-manager.service';
+import { HasActiveServer, HasRoleGuard, AdminGuard } from './core/guards';
 
 registerLocaleData(localeBs);
 
-@Component({
-  imports: [MatToolbar, MatButton, RouterOutlet, MatDivider, RouterLink],
-  template: `
-    <mat-toolbar class="shrink-0">
-      <span>Magacin</span>
-      <span class="flex-1 basis-auto"></span>
-      <button matButton [routerLink]="['/products']">Roba</button>
-      <button matButton [routerLink]="['/reports']">Izvještaji</button>
-      <button matButton (click)="openUnitMeasureDialog()">Mjerne jedinice</button>
-    </mat-toolbar>
-
-    <main class="flex flex-1 min-h-0 w-full overflow-hidden flex-col">
-      <mat-divider></mat-divider>
-      <router-outlet></router-outlet>
-    </main>
-  `,
-  styles: `
-    :host {
-      @apply flex flex-col h-full w-full overflow-hidden;
-    }
-  `
-})
-class ScaffoldLayout {
-  readonly dialog = inject(MatDialog);
-
-  openUnitMeasureDialog() {
-    const dialogRef = this.dialog.open(UnitMeasureIndexDialog, {
-      width: '1200px',
-      height: '600px',
-    });
-  }
+export const APP_INFO = {
+  name: 'Magacin',
+  version: '2.0.0-BETA',
 }
 
 export const routes: Routes = [
   {
     path: '',
-    component: ScaffoldLayout,
+    component: MainLayout,
+    canActivate: [HasActiveServer, HasRoleGuard],
     children: [
-      { path: 'products', component: ProductIndexPage },
-      { path: 'reports', component: ReportIndexPage },
+      { path: 'articles', loadChildren: () => import('./article/config').then(m => m.ARTICLE_ROUTES) },
+      { path: 'reports', loadChildren: () => import('./report/config').then(m => m.REPORT_ROUTES) },
+      { path: 'accounts', loadChildren: () => import('./accounts/config').then(m => m.ACCOUNT_ROUTES), canActivate: [AdminGuard] },
+      { path: 'settings', loadChildren: () => import('./settings/config').then(m => m.SETTINGS_ROUTES), canActivate: [AdminGuard] }
     ],
   },
+  {
+    path: '',
+    component: GuestLayout,
+    children: [
+      { path: 'auth', loadChildren: () => import('./auth/config').then(m => m.AUTH_ROUTES) },
+    ]
+  },
+  {
+    path: '**',
+    redirectTo: 'auth/sign-in',
+  }
 ];
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Ng core
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    ArticleService,
-    UnitMeasureService,
-    ReportService,
+    provideHttpClient(withInterceptors([authInterceptor])),
+
+    // App core
+    ServerManagerService,
+
+    // Material
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: {
@@ -87,8 +71,6 @@ export const appConfig: ApplicationConfig = {
         appearance: 'outline',
       },
     },
-    { provide: LOCALE_ID, useValue: 'bs-BA' },
-    { provide: MAT_DATE_LOCALE, useValue: 'bs-BA' },
     importProvidersFrom(MatDatepickerModule, MatNativeDateModule),
     {
       provide: MAT_SNACK_BAR_DEFAULT_OPTIONS,
@@ -96,12 +78,16 @@ export const appConfig: ApplicationConfig = {
         duration: 2000,
       },
     },
+
+    { provide: LOCALE_ID, useValue: 'bs-BA' },
+    { provide: MAT_DATE_LOCALE, useValue: 'bs-BA' },
   ],
 };
 
 @Component({
   selector: 'app-root',
-  template: ` <router-outlet></router-outlet> `,
+  template: `
+    <router-outlet></router-outlet> `,
   styles: `
     :host {
       @apply flex flex-col h-full w-full overflow-hidden;
@@ -109,4 +95,5 @@ export const appConfig: ApplicationConfig = {
   `,
   imports: [RouterOutlet],
 })
-export class App {}
+export class App {
+}

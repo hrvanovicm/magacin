@@ -1,146 +1,215 @@
 package app
 
 import (
-	"context"
+	"fmt"
+	"hrvanovicm/magacin/infra/paged"
+	"hrvanovicm/magacin/internal/activitylog"
 	"hrvanovicm/magacin/internal/report"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// GetAllReportTypes
-func (a *WailsApp) GetAllReportTypes() []report.ReportType {
-	return report.FindAllTypes()
+func (a *WailsApp) ListReportTypes() []report.Type {
+	return report.ValidListTypes
 }
 
-// GetAllReports
-func (a *WailsApp) GetAllReports() ([]report.Report, error) {
-	response := []report.Report{}
+type ListReportsRequest = report.ListQuery
 
-	err := a.runWithReadTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if reports, err := report.FindAllReports(ctx, tx); err != nil {
-			return err
-		} else {
-			response = reports
-		}
-
-		return nil
-	})
-
+func (a *WailsApp) ListReports(req ListReportsRequest) ([]report.Report, error) {
+	res, err := report.List(a.getRequest(), req)
 	if err != nil {
-		a.HandleError(err)
-		return response, err
+		a.report(err)
+	}
+	return res, err
+}
+
+type ListReportsPagedRequest = report.ListPagedQuery
+
+func (a *WailsApp) ListReportsPaged(req ListReportsPagedRequest) (paged.PagedResult[report.Report], error) {
+	res, err := report.ListPaged(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+func (a *WailsApp) ListSignUsers() ([]string, error) {
+	users, err := report.ListSignUsers(a.getRequest())
+	if err != nil {
+		return nil, err
 	}
 
-	return response, nil
+	return users, nil
 }
 
-// GetAllReportPublishLocations
-func (a *WailsApp) GetAllReportPublishLocations() ([]string, error) {
-	response := []string{}
+func (a *WailsApp) ListReportPublicLocations() ([]string, error) {
+	res, err := report.ListPublishLocations(a.getRequest())
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
 
-	err := a.runWithReadTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if locations, err := report.FindAllPublishLocations(ctx, tx); err != nil {
-			return err
-		} else {
-			response = locations
-		}
+func (a *WailsApp) GetNextReportCodeForType(reportType report.Type) (string, error) {
+	res, err := report.GetNextReportCodeForType(a.getRequest(), reportType)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
 
-		return nil
+type GetReportRequest = report.GetQuery
+
+func (a *WailsApp) GetReport(req GetReportRequest) (*report.Report, error) {
+	res, err := report.Get(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+type SaveReportRequest = report.SaveCommand
+
+func (a *WailsApp) SaveReport(req SaveReportRequest) (uint, error) {
+	res, err := report.Save(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+type DeleteReportRequest = report.DeleteCommand
+
+func (a *WailsApp) DeleteReport(req DeleteReportRequest) error {
+	err := report.Delete(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return err
+}
+
+type GetReportLogsRequest = report.GetLogsQuery
+
+func (a *WailsApp) GetReportLogs(req GetReportLogsRequest) ([]activitylog.Entry, error) {
+	res, err := report.GetLogs(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+func (a *WailsApp) ExportReport(id int64) error {
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Izvoz izvještaja",
+		DefaultFilename: fmt.Sprintf("izvjestaj-%d.xlsx", id),
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Excel (*.xlsx)", Pattern: "*.xlsx"},
+		},
 	})
 
 	if err != nil {
-		a.HandleError(err)
-		return response, err
+		return fmt.Errorf("export dialog: %w", err)
 	}
 
-	return response, nil
-}
-
-// GetNextReportCode
-func (a *WailsApp) GetNextReportCode() (string, error) {
-	var response string
-
-	err := a.runWithReadTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if reportCode, err := report.FindNextReportCode(ctx, tx); err != nil {
-			return err
-		} else {
-			response = reportCode
-		}
-
+	if path == "" {
 		return nil
-	})
-
-	if err != nil {
-		a.HandleError(err)
-		return response, err
 	}
 
-	return response, nil
-}
-
-// GetReportArticles
-func (a *WailsApp) GetReportArticles(id int64) ([]report.ReportArticle, error) {
-	response := []report.ReportArticle{}
-
-	err := a.runWithReadTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if reportArticles, err := report.FindArticlesByReportId(ctx, tx, id); err != nil {
-			return err
-		} else {
-			response = reportArticles
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		a.HandleError(err)
-		return response, err
+	if !strings.HasSuffix(path, ".xlsx") {
+		path += ".xlsx"
 	}
 
-	return response, nil
-}
-
-// SaveReport
-func (a *WailsApp) SaveReport(rep *report.Report, articles []report.ReportArticle) error {
-	err := a.runWithTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if err := report.Save(ctx, tx, rep); err != nil {
-			return err
-		}
-
-		if err := report.SaveArticles(ctx, tx, rep, articles); err != nil {
-			return err
-		}
-
-		return nil
-	})
-
+	data, err := report.GetExport(a.getRequest(), report.GetQuery{ID: uint(id)})
 	if err != nil {
-		a.HandleError(err)
+		a.report(err)
 		return err
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		a.report(err)
+		return fmt.Errorf("export write: %w", err)
+	}
+	return nil
+}
+
+func (a *WailsApp) ExportWorkOrder(id int64) error {
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Izvoz radnog naloga",
+		DefaultFilename: fmt.Sprintf("radni-nalog-%d.xlsx", id),
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Excel (*.xlsx)", Pattern: "*.xlsx"},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("export dialog: %w", err)
+	}
+	if path == "" {
+		return nil
+	}
+	if !strings.HasSuffix(path, ".xlsx") {
+		path += ".xlsx"
+	}
+
+	data, err := report.ExportWorkOrderXLSX(a.getRequest(), report.GetQuery{ID: uint(id)})
+	if err != nil {
+		a.report(err)
+		return err
+	}
+
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		a.report(err)
+		return fmt.Errorf("export write: %w", err)
 	}
 
 	return nil
 }
 
-// DeleteReport
-func (a *WailsApp) DeleteReport(id int64) error {
-	err := a.runWithTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if err := report.Delete(ctx, tx, id); err != nil {
-			return err
-		}
-
-		return nil
+func (a *WailsApp) ExportReports(req ListReportsRequest) error {
+	currentDate := time.Now().Format("2006-01-02")
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Izvoz izvještaja",
+		DefaultFilename: fmt.Sprintf("izvjestaji-%s.xlsx", currentDate),
+		Filters: []runtime.FileFilter{
+			{DisplayName: "Excel (*.xlsx)", Pattern: "*.xlsx"},
+			{DisplayName: "CSV (*.csv)", Pattern: "*.csv"},
+		},
 	})
-
 	if err != nil {
-		a.HandleError(err)
+		return fmt.Errorf("export dialog: %w", err)
+	}
+	if path == "" {
+		return nil
+	}
+
+	var data []byte
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".csv":
+		data, err = report.ListExport(a.getRequest(), report.ListExportQuery{
+			ListQuery: req,
+			Format:    report.FormatXLSX,
+		})
+	default:
+		if !strings.HasSuffix(path, ".xlsx") {
+			path += ".xlsx"
+		}
+		data, err = report.ListExport(a.getRequest(), report.ListExportQuery{
+			ListQuery: req,
+			Format:    report.FormatXLSX,
+		})
+	}
+	if err != nil {
+		a.report(err)
 		return err
 	}
 
-	return nil
-}
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		a.report(err)
+		return fmt.Errorf("export write: %w", err)
+	}
 
-// CanReportUseRecipes
-func (a *WailsApp) CanReportUseRecipes(rep *report.Report) bool {
-	return rep.CanUseRecipes()
+	return nil
 }

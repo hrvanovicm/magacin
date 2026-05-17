@@ -1,30 +1,45 @@
 package app
 
 import (
-	"context"
 	"hrvanovicm/magacin/internal/company"
-
-	"github.com/jmoiron/sqlx"
 )
 
-// GetAllCompanies
-func (a *WailsApp) GetAllCompanies() ([]company.Company, error) {
-	response := []company.Company{}
+type ListCompaniesRequest = company.ListQuery
 
-	err := a.runWithReadTx(func(ctx context.Context, tx *sqlx.Tx) error {
-		if companies, err := company.FindAll(ctx, tx); err != nil {
-			return err
-		} else {
-			response = companies
-		}
-
-		return nil
-	})
-
+func (a *WailsApp) ListCompanies(req ListCompaniesRequest) ([]company.Company, error) {
+	res, err := company.List(a.getRequest(), req)
 	if err != nil {
-		a.HandleError(err)
-		return response, err
+		a.report(err)
 	}
+	return res, err
+}
 
-	return response, nil
+type GetCompanyRequest = company.GetQuery
+
+func (a *WailsApp) GetCompany(req GetCompanyRequest) (*company.Company, error) {
+	res, err := company.Get(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+type SaveCompanyRequest = company.SaveCommand
+
+func (a *WailsApp) SaveCompany(req SaveCompanyRequest) (uint, error) {
+	res, err := company.Save(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return res, err
+}
+
+type DeleteCompanyRequest = company.DeleteCommand
+
+func (a *WailsApp) DeleteCompany(req DeleteCompanyRequest) error {
+	err := company.Delete(a.getRequest(), req)
+	if err != nil {
+		a.report(err)
+	}
+	return err
 }
